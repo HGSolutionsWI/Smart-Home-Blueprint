@@ -39,6 +39,44 @@ const projectOptions = [
   },
 ];
 
+const homeSizeOptions = [
+  {
+    id: "under-1500",
+    icon: "🏠",
+    title: "Under 1,500 sq. ft.",
+    description:
+      "A smaller footprint usually requires fewer network zones and shorter infrastructure runs.",
+  },
+  {
+    id: "1500-2500",
+    icon: "🏡",
+    title: "1,500–2,500 sq. ft.",
+    description:
+      "A common home size that typically benefits from multiple wired network locations.",
+  },
+  {
+    id: "2500-3500",
+    icon: "🏘️",
+    title: "2,500–3,500 sq. ft.",
+    description:
+      "Coverage, equipment capacity, and room-by-room planning become more important.",
+  },
+  {
+    id: "3500-5000",
+    icon: "🏛️",
+    title: "3,500–5,000 sq. ft.",
+    description:
+      "Larger homes often require multiple network zones, additional switching, and more careful equipment planning.",
+  },
+  {
+    id: "over-5000",
+    icon: "🏰",
+    title: "Over 5,000 sq. ft.",
+    description:
+      "Large or custom homes generally require a more advanced infrastructure and coverage strategy.",
+  },
+];
+
 const guidanceByProject = {
   "new-construction": {
     consultant:
@@ -61,14 +99,27 @@ const guidanceByProject = {
 } as const;
 
 type ProjectType = keyof typeof guidanceByProject;
+type HomeSize = (typeof homeSizeOptions)[number]["id"];
 
 export function BlueprintWorkspace() {
+  const [questionIndex, setQuestionIndex] = useState(0);
   const [selectedProjectType, setSelectedProjectType] =
     useState<ProjectType | null>(null);
+  const [selectedHomeSize, setSelectedHomeSize] =
+    useState<HomeSize | null>(null);
 
-  const progress = selectedProjectType ? 8 : 2;
+  const progress = questionIndex === 0 ? 4 : 8;
 
   const activeGuidance = useMemo(() => {
+    if (questionIndex === 1) {
+      return {
+        consultant:
+          "Home size helps us estimate preliminary network coverage, infrastructure quantities, switching capacity, and overall technology complexity.",
+        didYouKnow:
+          "Square footage alone does not determine Wi-Fi performance, but it provides a useful starting point before floor plans and construction materials are reviewed.",
+      };
+    }
+
     if (!selectedProjectType) {
       return {
         consultant:
@@ -79,7 +130,24 @@ export function BlueprintWorkspace() {
     }
 
     return guidanceByProject[selectedProjectType];
-  }, [selectedProjectType]);
+  }, [questionIndex, selectedProjectType]);
+
+  const canContinue =
+    questionIndex === 0 ? Boolean(selectedProjectType) : Boolean(selectedHomeSize);
+
+  function handleContinue() {
+    if (!canContinue) return;
+
+    if (questionIndex === 0) {
+      setQuestionIndex(1);
+    }
+  }
+
+  function handlePrevious() {
+    if (questionIndex > 0) {
+      setQuestionIndex(questionIndex - 1);
+    }
+  }
 
   return (
     <main
@@ -99,12 +167,7 @@ export function BlueprintWorkspace() {
         }}
       >
         <aside>
-          <Card
-            style={{
-              position: "sticky",
-              top: theme.spacing.lg,
-            }}
-          >
+          <Card style={{ position: "sticky", top: theme.spacing.lg }}>
             <p
               style={{
                 color: theme.colors.primary,
@@ -158,10 +221,7 @@ export function BlueprintWorkspace() {
 
             <nav
               aria-label="Blueprint consultation progress"
-              style={{
-                display: "grid",
-                gap: theme.spacing.sm,
-              }}
+              style={{ display: "grid", gap: theme.spacing.sm }}
             >
               {consultationSteps.map((step, index) => {
                 const isActive = index === 0;
@@ -214,11 +274,7 @@ export function BlueprintWorkspace() {
         </aside>
 
         <section style={{ minWidth: 0 }}>
-          <Card
-            style={{
-              padding: theme.spacing.xxl,
-            }}
-          >
+          <Card style={{ padding: theme.spacing.xxl }}>
             <p
               style={{
                 color: theme.colors.primary,
@@ -229,7 +285,7 @@ export function BlueprintWorkspace() {
                 marginBottom: theme.spacing.md,
               }}
             >
-              DISCOVERY SESSION 1 OF 5
+              DISCOVERY SESSION 1 OF 5 · QUESTION {questionIndex + 1}
             </p>
 
             <h1
@@ -240,7 +296,9 @@ export function BlueprintWorkspace() {
                 marginBottom: theme.spacing.md,
               }}
             >
-              Tell us about your project.
+              {questionIndex === 0
+                ? "Tell us about your project."
+                : "How large is your home?"}
             </h1>
 
             <p
@@ -252,9 +310,9 @@ export function BlueprintWorkspace() {
                 marginBottom: theme.spacing.xl,
               }}
             >
-              Choose the option that best describes the work you are planning.
-              This decision will shape your infrastructure strategy and budget
-              assumptions.
+              {questionIndex === 0
+                ? "Choose the option that best describes the work you are planning. This decision will shape your infrastructure strategy and budget assumptions."
+                : "Choose the approximate finished square footage. We will use this as a starting point for network coverage, equipment capacity, and project complexity."}
             </p>
 
             <div
@@ -264,18 +322,31 @@ export function BlueprintWorkspace() {
                 marginBottom: theme.spacing.xl,
               }}
             >
-              {projectOptions.map((option) => (
-                <OptionCard
-                  key={option.id}
-                  icon={option.icon}
-                  title={option.title}
-                  description={option.description}
-                  selected={selectedProjectType === option.id}
-                  onSelect={() =>
-                    setSelectedProjectType(option.id as ProjectType)
-                  }
-                />
-              ))}
+              {questionIndex === 0
+                ? projectOptions.map((option) => (
+                    <OptionCard
+                      key={option.id}
+                      icon={option.icon}
+                      title={option.title}
+                      description={option.description}
+                      selected={selectedProjectType === option.id}
+                      onSelect={() =>
+                        setSelectedProjectType(option.id as ProjectType)
+                      }
+                    />
+                  ))
+                : homeSizeOptions.map((option) => (
+                    <OptionCard
+                      key={option.id}
+                      icon={option.icon}
+                      title={option.title}
+                      description={option.description}
+                      selected={selectedHomeSize === option.id}
+                      onSelect={() =>
+                        setSelectedHomeSize(option.id as HomeSize)
+                      }
+                    />
+                  ))}
             </div>
 
             <div
@@ -309,9 +380,43 @@ export function BlueprintWorkspace() {
               </p>
             </div>
 
-            <PrimaryButton disabled={!selectedProjectType}>
-              Continue
-            </PrimaryButton>
+            <div
+              style={{
+                display: "flex",
+                gap: theme.spacing.md,
+                flexWrap: "wrap",
+              }}
+            >
+              {questionIndex > 0 && (
+                <button
+                  type="button"
+                  onClick={handlePrevious}
+                  style={{
+                    background: theme.colors.surface,
+                    color: theme.colors.primaryDark,
+                    border: `1px solid ${theme.colors.border}`,
+                    borderRadius: theme.radius.medium,
+                    padding: `${theme.spacing.md} 30px`,
+                    minHeight: "48px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Previous
+                </button>
+              )}
+
+              <PrimaryButton
+                disabled={!canContinue}
+                onClick={handleContinue}
+                style={{
+                  opacity: canContinue ? 1 : 0.55,
+                  cursor: canContinue ? "pointer" : "not-allowed",
+                }}
+              >
+                Continue
+              </PrimaryButton>
+            </div>
           </Card>
 
           <Card
