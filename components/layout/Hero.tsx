@@ -1,4 +1,5 @@
 import { PrimaryButton } from "@/components/ui/Button/PrimaryButton";
+import { Card } from "@/components/ui/Card/card";
 import { theme } from "@/lib/constants/theme";
 
 export function Hero() {
@@ -13,10 +14,11 @@ export function Hero() {
         background: theme.colors.background,
       }}
     >
-      <div
+      <Card
         style={{
           maxWidth: "760px",
           textAlign: "center",
+          padding: theme.spacing.xxl,
         }}
       >
         <p
@@ -55,7 +57,7 @@ export function Hero() {
         </p>
 
         <PrimaryButton>Start My Blueprint</PrimaryButton>
-      </div>
+      </Card>
     </section>
   );
 }

@@ -1,4 +1,12 @@
+import Link from "next/link";
 import { theme } from "@/lib/constants/theme";
+
+const navigationItems = [
+  { label: "How It Works", href: "/how-it-works" },
+  { label: "Features", href: "/features" },
+  { label: "Pricing", href: "/pricing" },
+  { label: "FAQ", href: "/faq" },
+];
 
 export function Header() {
   return (
@@ -11,9 +19,16 @@ export function Header() {
         alignItems: "center",
         justifyContent: "space-between",
         gap: theme.spacing.lg,
+        flexWrap: "wrap",
       }}
     >
-      <div>
+      <Link
+        href="/"
+        style={{
+          color: "inherit",
+          textDecoration: "none",
+        }}
+      >
         <div
           style={{
             fontSize: "0.72rem",
@@ -34,16 +49,47 @@ export function Header() {
         >
           Design your home like a professional.
         </div>
-      </div>
+      </Link>
 
-      <div
+      <nav
+        aria-label="Primary navigation"
         style={{
-          fontSize: "0.85rem",
-          opacity: 0.85,
+          display: "flex",
+          alignItems: "center",
+          gap: theme.spacing.lg,
+          flexWrap: "wrap",
         }}
       >
-        Production Build
-      </div>
+        {navigationItems.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            style={{
+              color: theme.colors.surface,
+              textDecoration: "none",
+              fontSize: "0.9rem",
+              fontWeight: 600,
+            }}
+          >
+            {item.label}
+          </Link>
+        ))}
+
+        <Link
+          href="/login"
+          style={{
+            color: theme.colors.primaryDark,
+            background: theme.colors.surface,
+            textDecoration: "none",
+            borderRadius: theme.radius.medium,
+            padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+            fontSize: "0.9rem",
+            fontWeight: 700,
+          }}
+        >
+          Log In
+        </Link>
+      </nav>
     </header>
   );
 }
