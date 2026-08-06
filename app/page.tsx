@@ -1,4 +1,5 @@
 import { Header } from "@/components/layout/Header";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 export default function Home() {
   return (
