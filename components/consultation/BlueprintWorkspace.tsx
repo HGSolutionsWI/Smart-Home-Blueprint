@@ -1,45 +1,85 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
+import { OptionCard } from "@/components/consultation/OptionCard";
 import { Card } from "@/components/ui/Card/card";
 import { PrimaryButton } from "@/components/ui/Button/PrimaryButton";
 import { theme } from "@/lib/constants/theme";
 
 const consultationSteps = [
+  "Discover Your Home",
+  "Discover Your Lifestyle",
+  "Design Your Infrastructure",
+  "Choose Your Technology",
+  "Build Your Blueprint",
+];
+
+const projectOptions = [
   {
-    id: "home",
-    label: "Discover Your Home",
-    status: "active",
+    id: "new-construction",
+    icon: "🏗️",
+    title: "New Construction",
+    description:
+      "Walls are open, infrastructure costs are more predictable, and future-ready pathways can be planned before drywall.",
   },
   {
-    id: "lifestyle",
-    label: "Discover Your Lifestyle",
-    status: "upcoming",
+    id: "remodel-addition",
+    icon: "🔨",
+    title: "Remodel or Addition",
+    description:
+      "Some areas may be open while others remain finished. We will separate accessible work from retrofit work.",
   },
   {
-    id: "infrastructure",
-    label: "Design Your Infrastructure",
-    status: "upcoming",
-  },
-  {
-    id: "technology",
-    label: "Choose Your Technology",
-    status: "upcoming",
-  },
-  {
-    id: "blueprint",
-    label: "Build Your Blueprint",
-    status: "upcoming",
+    id: "existing-home",
+    icon: "🏡",
+    title: "Existing Home",
+    description:
+      "We will focus on practical cable pathways, access limitations, retrofit feasibility, and wider budget ranges.",
   },
 ];
 
-export function BlueprintWorkspace() {
-  const [currentStep, setCurrentStep] = useState(0);
+const guidanceByProject = {
+  "new-construction": {
+    consultant:
+      "Excellent timing. Since the walls are open, we can prioritize wiring, conduit, equipment locations, and future expansion before those decisions become expensive to change.",
+    didYouKnow:
+      "Installing pathways during framing is usually far easier than opening finished walls later.",
+  },
+  "remodel-addition": {
+    consultant:
+      "This is a strong opportunity to improve infrastructure in the areas already under construction while planning realistic transitions into finished parts of the home.",
+    didYouKnow:
+      "A remodel can establish new technology pathways even when only part of the home is open.",
+  },
+  "existing-home": {
+    consultant:
+      "No problem. We will focus on practical routes through attics, basements, crawl spaces, closets, existing conduit, and selective drywall access where needed.",
+    didYouKnow:
+      "A finished home can still support excellent wired technology, but installer pathway review becomes much more important.",
+  },
+} as const;
 
-  const progress = Math.round(
-    ((currentStep + 1) / consultationSteps.length) * 100,
-  );
+type ProjectType = keyof typeof guidanceByProject;
+
+export function BlueprintWorkspace() {
+  const [selectedProjectType, setSelectedProjectType] =
+    useState<ProjectType | null>(null);
+
+  const progress = selectedProjectType ? 8 : 2;
+
+  const activeGuidance = useMemo(() => {
+    if (!selectedProjectType) {
+      return {
+        consultant:
+          "Let’s begin with the project itself. This first answer determines how we approach wiring, access, risk, and budget confidence throughout the Blueprint.",
+        didYouKnow:
+          "The same technology package can have very different installation costs depending on whether walls are open or finished.",
+      };
+    }
+
+    return guidanceByProject[selectedProjectType];
+  }, [selectedProjectType]);
 
   return (
     <main
@@ -124,17 +164,12 @@ export function BlueprintWorkspace() {
               }}
             >
               {consultationSteps.map((step, index) => {
-                const isActive = index === currentStep;
-                const isComplete = index < currentStep;
+                const isActive = index === 0;
 
                 return (
-                  <button
-                    key={step.id}
-                    type="button"
-                    onClick={() => setCurrentStep(index)}
+                  <div
+                    key={step}
                     style={{
-                      width: "100%",
-                      textAlign: "left",
                       padding: theme.spacing.md,
                       borderRadius: theme.radius.medium,
                       border: `1px solid ${
@@ -145,43 +180,40 @@ export function BlueprintWorkspace() {
                       background: isActive
                         ? "#EAF3FF"
                         : theme.colors.surface,
-                      color: isActive
-                        ? theme.colors.primaryDark
-                        : theme.colors.text,
-                      cursor: "pointer",
-                      fontWeight: isActive ? 700 : 500,
                     }}
                   >
                     <span
                       style={{
                         display: "block",
                         fontSize: "0.72rem",
-                        color: isComplete
-                          ? theme.colors.success
+                        color: isActive
+                          ? theme.colors.primary
                           : theme.colors.textLight,
                         marginBottom: theme.spacing.xs,
+                        fontWeight: 700,
                       }}
                     >
-                      {isComplete
-                        ? "COMPLETE"
-                        : isActive
-                          ? "CURRENT SESSION"
-                          : `SESSION ${index + 1}`}
+                      {isActive ? "CURRENT SESSION" : `SESSION ${index + 1}`}
                     </span>
 
-                    {step.label}
-                  </button>
+                    <span
+                      style={{
+                        color: isActive
+                          ? theme.colors.primaryDark
+                          : theme.colors.text,
+                        fontWeight: isActive ? 700 : 500,
+                      }}
+                    >
+                      {step}
+                    </span>
+                  </div>
                 );
               })}
             </nav>
           </Card>
         </aside>
 
-        <section
-          style={{
-            minWidth: 0,
-          }}
-        >
+        <section style={{ minWidth: 0 }}>
           <Card
             style={{
               padding: theme.spacing.xxl,
@@ -197,7 +229,7 @@ export function BlueprintWorkspace() {
                 marginBottom: theme.spacing.md,
               }}
             >
-              DISCOVERY SESSION {currentStep + 1} OF 5
+              DISCOVERY SESSION 1 OF 5
             </p>
 
             <h1
@@ -205,25 +237,46 @@ export function BlueprintWorkspace() {
                 color: theme.colors.primaryDark,
                 fontSize: "clamp(2rem, 4vw, 3.5rem)",
                 lineHeight: 1.1,
-                marginBottom: theme.spacing.lg,
+                marginBottom: theme.spacing.md,
               }}
             >
-              {consultationSteps[currentStep].label}
+              Tell us about your project.
             </h1>
 
             <p
               style={{
                 color: theme.colors.textLight,
-                fontSize: "1.1rem",
+                fontSize: "1.05rem",
                 lineHeight: 1.7,
                 maxWidth: "760px",
                 marginBottom: theme.spacing.xl,
               }}
             >
-              This workspace will guide the customer through one focused
-              decision at a time while their Smart Home Blueprint grows in the
-              background.
+              Choose the option that best describes the work you are planning.
+              This decision will shape your infrastructure strategy and budget
+              assumptions.
             </p>
+
+            <div
+              style={{
+                display: "grid",
+                gap: theme.spacing.md,
+                marginBottom: theme.spacing.xl,
+              }}
+            >
+              {projectOptions.map((option) => (
+                <OptionCard
+                  key={option.id}
+                  icon={option.icon}
+                  title={option.title}
+                  description={option.description}
+                  selected={selectedProjectType === option.id}
+                  onSelect={() =>
+                    setSelectedProjectType(option.id as ProjectType)
+                  }
+                />
+              ))}
+            </div>
 
             <div
               style={{
@@ -252,19 +305,11 @@ export function BlueprintWorkspace() {
                   margin: 0,
                 }}
               >
-                We will begin by understanding the home, construction
-                conditions, and planning opportunities. Every answer will help
-                shape the final recommendations.
+                {activeGuidance.consultant}
               </p>
             </div>
 
-            <PrimaryButton
-              onClick={() =>
-                setCurrentStep((step) =>
-                  Math.min(step + 1, consultationSteps.length - 1),
-                )
-              }
-            >
+            <PrimaryButton disabled={!selectedProjectType}>
               Continue
             </PrimaryButton>
           </Card>
@@ -293,9 +338,7 @@ export function BlueprintWorkspace() {
                 margin: 0,
               }}
             >
-              Technology decisions made before drywall can be significantly
-              easier and less disruptive than retrofitting the same pathways
-              later.
+              {activeGuidance.didYouKnow}
             </p>
           </Card>
         </section>
