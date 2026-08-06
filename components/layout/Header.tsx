@@ -1,14 +1,16 @@
+import { theme } from "@/lib/constants/theme";
+
 export function Header() {
   return (
     <header
       style={{
-        background: "#0B2D4F",
-        color: "#FFFFFF",
-        padding: "14px 24px",
+        background: theme.colors.primaryDark,
+        color: theme.colors.surface,
+        padding: `${theme.spacing.md} ${theme.spacing.lg}`,
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        gap: "20px",
+        gap: theme.spacing.lg,
       }}
     >
       <div>
@@ -27,7 +29,7 @@ export function Header() {
           style={{
             fontSize: "1.05rem",
             fontWeight: 700,
-            marginTop: "3px",
+            marginTop: theme.spacing.xs,
           }}
         >
           Design your home like a professional.
