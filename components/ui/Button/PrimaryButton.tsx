@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { theme } from "@/lib/constants/theme";
 
 type PrimaryButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: ReactNode;
@@ -14,15 +15,16 @@ export function PrimaryButton({
       type="button"
       {...buttonProps}
       style={{
-        background: "#0B63CE",
-        color: "#FFFFFF",
+        background: theme.colors.primary,
+        color: theme.colors.surface,
         border: "none",
-        borderRadius: "10px",
-        padding: "16px 30px",
+        borderRadius: theme.radius.medium,
+        padding: `${theme.spacing.md} 30px`,
+        minHeight: "48px",
         fontSize: "1rem",
         fontWeight: 700,
         cursor: "pointer",
-        minHeight: "48px",
+        boxShadow: theme.shadow.card,
         ...style,
       }}
     >
