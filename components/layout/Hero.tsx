@@ -1,4 +1,5 @@
 import { PrimaryButton } from "@/components/ui/Button/PrimaryButton";
+import { theme } from "@/lib/constants/theme";
 
 export function Hero() {
   return (
@@ -8,7 +9,8 @@ export function Hero() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "48px 24px",
+        padding: `${theme.spacing.xxl} ${theme.spacing.lg}`,
+        background: theme.colors.background,
       }}
     >
       <div
@@ -19,11 +21,11 @@ export function Hero() {
       >
         <p
           style={{
-            color: "#0B63CE",
+            color: theme.colors.primary,
             fontWeight: 700,
             letterSpacing: "0.12em",
             fontSize: "0.78rem",
-            marginBottom: "16px",
+            marginBottom: theme.spacing.md,
           }}
         >
           PROFESSIONAL SMART HOME PLANNING
@@ -31,10 +33,10 @@ export function Hero() {
 
         <h1
           style={{
-            color: "#0B2D4F",
+            color: theme.colors.primaryDark,
             fontSize: "clamp(2.4rem, 6vw, 4.5rem)",
             lineHeight: 1.05,
-            marginBottom: "24px",
+            marginBottom: theme.spacing.lg,
           }}
         >
           Build your smart home with confidence.
@@ -42,10 +44,10 @@ export function Hero() {
 
         <p
           style={{
-            color: "#526273",
+            color: theme.colors.textLight,
             fontSize: "1.15rem",
             lineHeight: 1.7,
-            marginBottom: "32px",
+            marginBottom: theme.spacing.xl,
           }}
         >
           Plan your infrastructure, technology, budget, and contractor
