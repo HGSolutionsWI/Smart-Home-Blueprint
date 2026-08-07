@@ -41,6 +41,46 @@ export function QuestionRenderer({
     );
   }
 
+  if (question.type === "multi-select" && question.options) {
+    const selectedAnswers = Array.isArray(answer) ? answer : [];
+
+    function toggleOption(optionId: string) {
+      const isSelected = selectedAnswers.includes(optionId);
+
+      if (isSelected) {
+        onAnswer(
+          selectedAnswers.filter(
+            (selectedOption) => selectedOption !== optionId,
+          ),
+        );
+        return;
+      }
+
+      onAnswer([...selectedAnswers, optionId]);
+    }
+
+    return (
+      <div
+        style={{
+          display: "grid",
+          gap: theme.spacing.md,
+          marginBottom: theme.spacing.xl,
+        }}
+      >
+        {question.options.map((option) => (
+          <OptionCard
+            key={option.id}
+            icon={option.icon ?? "✓"}
+            title={option.title}
+            description={option.description ?? ""}
+            selected={selectedAnswers.includes(option.id)}
+            onSelect={() => toggleOption(option.id)}
+          />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div
       style={{

@@ -52,11 +52,14 @@ export function BlueprintWorkspace() {
     return currentQuestion.defaultGuidance;
   }, [currentAnswer, currentQuestion]);
 
-  const canContinue =
-    currentQuestion.required === false ||
-    (currentAnswer !== null &&
-      currentAnswer !== undefined &&
-      currentAnswer !== "");
+  const hasAnswer = Array.isArray(currentAnswer)
+  ? currentAnswer.length > 0
+  : currentAnswer !== null &&
+    currentAnswer !== undefined &&
+    currentAnswer !== "";
+
+const canContinue =
+  currentQuestion.required === false || hasAnswer;
 
   function handleAnswer(answer: BlueprintAnswer) {
     setAnswers((previousAnswers) => ({

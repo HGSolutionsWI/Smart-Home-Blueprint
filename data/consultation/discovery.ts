@@ -39,6 +39,7 @@ export const discoveryQuestions: readonly BlueprintQuestion[] = [
         "The same technology package can have very different installation costs depending on whether walls are open or finished.",
     },
   },
+
   {
     id: "homeSize",
     sessionId: "discovery",
@@ -137,6 +138,80 @@ export const discoveryQuestions: readonly BlueprintQuestion[] = [
         "Wi-Fi signals weaken as they pass through floors, especially when those floors contain dense materials, mechanical systems, ductwork, or radiant heating.",
     },
   },
+
+  {
+    id: "outdoorCoverage",
+    sessionId: "discovery",
+    type: "multi-select",
+    title: "Where would you like outdoor or detached-building coverage?",
+    description:
+      "Select every area where you would like reliable Wi-Fi or connected technology. Choose all that apply.",
+    required: true,
+    options: [
+      {
+        id: "patio-deck",
+        icon: "🪑",
+        title: "Patio or Deck",
+        description:
+          "Extend reliable connectivity to outdoor entertaining and seating areas.",
+      },
+      {
+        id: "yard",
+        icon: "🌳",
+        title: "Yard",
+        description:
+          "Provide broader wireless coverage around the home's exterior and lawn areas.",
+      },
+      {
+        id: "pool",
+        icon: "🏊",
+        title: "Pool Area",
+        description:
+          "Support mobile devices, audio, cameras, and connected pool equipment.",
+      },
+      {
+        id: "attached-garage",
+        icon: "🚗",
+        title: "Attached Garage",
+        description:
+          "Improve connectivity for vehicles, cameras, door controls, and other connected equipment.",
+      },
+      {
+        id: "detached-garage",
+        icon: "🏠",
+        title: "Detached Garage",
+        description:
+          "Plan connectivity between the main residence and a separate garage structure.",
+      },
+      {
+        id: "outbuilding",
+        icon: "🛠️",
+        title: "Detached Outbuilding",
+        description:
+          "Plan connectivity for a workshop, barn, shed, studio, or other detached structure.",
+      },
+      {
+        id: "driveway",
+        icon: "🚙",
+        title: "Driveway or Property Entrance",
+        description:
+          "Support cameras, access control, intercoms, or connectivity farther from the home.",
+      },
+      {
+        id: "none",
+        icon: "✓",
+        title: "No Outdoor Coverage Needed",
+        description:
+          "Keep the initial network plan focused on the home's interior.",
+      },
+    ],
+    defaultGuidance: {
+      consultant:
+        "Outdoor coverage is planned differently from indoor coverage. Detached structures, distance, exterior materials, and available cable pathways can all affect the best solution.",
+      didYouKnow:
+        "A detached garage or outbuilding does not automatically require its own internet service. Depending on distance and available pathways, it may be connected back to the home's primary network.",
+    },
+  },
 ];
 
 export const projectTypeGuidance = {
@@ -146,12 +221,14 @@ export const projectTypeGuidance = {
     didYouKnow:
       "Installing pathways during framing is usually far easier than opening finished walls later.",
   },
+
   "remodel-addition": {
     consultant:
       "This is a strong opportunity to improve infrastructure in the areas already under construction while planning realistic transitions into finished parts of the home.",
     didYouKnow:
       "A remodel can establish new technology pathways even when only part of the home is open.",
   },
+
   "existing-home": {
     consultant:
       "No problem. We will focus on practical routes through attics, basements, crawl spaces, closets, existing conduit, and selective drywall access where needed.",
