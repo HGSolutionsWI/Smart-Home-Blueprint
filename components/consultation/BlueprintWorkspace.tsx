@@ -1,17 +1,16 @@
 "use client";
-import {
-  guidanceByProject,
-  homeSizeOptions,
-  projectOptions,
-  type HomeSize,
-  type ProjectType,
-} from "@/data/consultation/discovery";
+
 import { useMemo, useState } from "react";
 
 import { OptionCard } from "@/components/consultation/OptionCard";
 import { Card } from "@/components/ui/Card/card";
 import { PrimaryButton } from "@/components/ui/Button/PrimaryButton";
+import {
+  discoveryQuestions,
+  projectTypeGuidance,
+} from "@/data/consultation/discovery";
 import { theme } from "@/lib/constants/theme";
+import type { BlueprintAnswers } from "@/types/blueprint";
 
 const consultationSteps = [
   "Discover Your Home",
@@ -23,49 +22,57 @@ const consultationSteps = [
 
 export function BlueprintWorkspace() {
   const [questionIndex, setQuestionIndex] = useState(0);
-  const [selectedProjectType, setSelectedProjectType] =
-    useState<ProjectType | null>(null);
-  const [selectedHomeSize, setSelectedHomeSize] =
-    useState<HomeSize | null>(null);
 
-  const progress = questionIndex === 0 ? 4 : 8;
+  const [answers, setAnswers] = useState<BlueprintAnswers>({
+    projectType: null,
+    homeSize: null,
+  });
+
+  const currentQuestion = discoveryQuestions[questionIndex];
+  const currentAnswer = answers[currentQuestion.id];
+
+  const progress = Math.round(
+    ((questionIndex + 1) / discoveryQuestions.length) * 20,
+  );
 
   const activeGuidance = useMemo(() => {
-    if (questionIndex === 1) {
-      return {
-        consultant:
-          "Home size helps us estimate preliminary network coverage, infrastructure quantities, switching capacity, and overall technology complexity.",
-        didYouKnow:
-          "Square footage alone does not determine Wi-Fi performance, but it provides a useful starting point before floor plans and construction materials are reviewed.",
-      };
+    if (
+      currentQuestion.id === "projectType" &&
+      typeof currentAnswer === "string" &&
+      currentAnswer in projectTypeGuidance
+    ) {
+      return projectTypeGuidance[
+        currentAnswer as keyof typeof projectTypeGuidance
+      ];
     }
 
-    if (!selectedProjectType) {
-      return {
-        consultant:
-          "Let’s begin with the project itself. This first answer determines how we approach wiring, access, risk, and budget confidence throughout the Blueprint.",
-        didYouKnow:
-          "The same technology package can have very different installation costs depending on whether walls are open or finished.",
-      };
-    }
-
-    return guidanceByProject[selectedProjectType];
-  }, [questionIndex, selectedProjectType]);
+    return currentQuestion.defaultGuidance;
+  }, [currentAnswer, currentQuestion]);
 
   const canContinue =
-    questionIndex === 0 ? Boolean(selectedProjectType) : Boolean(selectedHomeSize);
+    currentQuestion.required === false ||
+    (currentAnswer !== null &&
+      currentAnswer !== undefined &&
+      currentAnswer !== "");
+
+  function handleAnswer(answer: string) {
+    setAnswers((previousAnswers) => ({
+      ...previousAnswers,
+      [currentQuestion.id]: answer,
+    }));
+  }
 
   function handleContinue() {
     if (!canContinue) return;
 
-    if (questionIndex === 0) {
-      setQuestionIndex(1);
+    if (questionIndex < discoveryQuestions.length - 1) {
+      setQuestionIndex((current) => current + 1);
     }
   }
 
   function handlePrevious() {
     if (questionIndex > 0) {
-      setQuestionIndex(questionIndex - 1);
+      setQuestionIndex((current) => current - 1);
     }
   }
 
@@ -87,7 +94,12 @@ export function BlueprintWorkspace() {
         }}
       >
         <aside>
-          <Card style={{ position: "sticky", top: theme.spacing.lg }}>
+          <Card
+            style={{
+              position: "sticky",
+              top: theme.spacing.lg,
+            }}
+          >
             <p
               style={{
                 color: theme.colors.primary,
@@ -141,7 +153,10 @@ export function BlueprintWorkspace() {
 
             <nav
               aria-label="Blueprint consultation progress"
-              style={{ display: "grid", gap: theme.spacing.sm }}
+              style={{
+                display: "grid",
+                gap: theme.spacing.sm,
+              }}
             >
               {consultationSteps.map((step, index) => {
                 const isActive = index === 0;
@@ -193,8 +208,16 @@ export function BlueprintWorkspace() {
           </Card>
         </aside>
 
-        <section style={{ minWidth: 0 }}>
-          <Card style={{ padding: theme.spacing.xxl }}>
+        <section
+          style={{
+            minWidth: 0,
+          }}
+        >
+          <Card
+            style={{
+              padding: theme.spacing.xxl,
+            }}
+          >
             <p
               style={{
                 color: theme.colors.primary,
@@ -205,7 +228,8 @@ export function BlueprintWorkspace() {
                 marginBottom: theme.spacing.md,
               }}
             >
-              DISCOVERY SESSION 1 OF 5 · QUESTION {questionIndex + 1}
+              DISCOVERY SESSION 1 OF 5 · QUESTION {questionIndex + 1} OF{" "}
+              {discoveryQuestions.length}
             </p>
 
             <h1
@@ -216,58 +240,44 @@ export function BlueprintWorkspace() {
                 marginBottom: theme.spacing.md,
               }}
             >
-              {questionIndex === 0
-                ? "Tell us about your project."
-                : "How large is your home?"}
+              {currentQuestion.title}
             </h1>
 
-            <p
-              style={{
-                color: theme.colors.textLight,
-                fontSize: "1.05rem",
-                lineHeight: 1.7,
-                maxWidth: "760px",
-                marginBottom: theme.spacing.xl,
-              }}
-            >
-              {questionIndex === 0
-                ? "Choose the option that best describes the work you are planning. This decision will shape your infrastructure strategy and budget assumptions."
-                : "Choose the approximate finished square footage. We will use this as a starting point for network coverage, equipment capacity, and project complexity."}
-            </p>
+            {currentQuestion.description && (
+              <p
+                style={{
+                  color: theme.colors.textLight,
+                  fontSize: "1.05rem",
+                  lineHeight: 1.7,
+                  maxWidth: "760px",
+                  marginBottom: theme.spacing.xl,
+                }}
+              >
+                {currentQuestion.description}
+              </p>
+            )}
 
-            <div
-              style={{
-                display: "grid",
-                gap: theme.spacing.md,
-                marginBottom: theme.spacing.xl,
-              }}
-            >
-              {questionIndex === 0
-                ? projectOptions.map((option) => (
+            {currentQuestion.type === "single-select" &&
+              currentQuestion.options && (
+                <div
+                  style={{
+                    display: "grid",
+                    gap: theme.spacing.md,
+                    marginBottom: theme.spacing.xl,
+                  }}
+                >
+                  {currentQuestion.options.map((option) => (
                     <OptionCard
                       key={option.id}
-                      icon={option.icon}
+                      icon={option.icon ?? "✓"}
                       title={option.title}
-                      description={option.description}
-                      selected={selectedProjectType === option.id}
-                      onSelect={() =>
-                        setSelectedProjectType(option.id as ProjectType)
-                      }
-                    />
-                  ))
-                : homeSizeOptions.map((option) => (
-                    <OptionCard
-                      key={option.id}
-                      icon={option.icon}
-                      title={option.title}
-                      description={option.description}
-                      selected={selectedHomeSize === option.id}
-                      onSelect={() =>
-                        setSelectedHomeSize(option.id as HomeSize)
-                      }
+                      description={option.description ?? ""}
+                      selected={currentAnswer === option.id}
+                      onSelect={() => handleAnswer(option.id)}
                     />
                   ))}
-            </div>
+                </div>
+              )}
 
             <div
               style={{
