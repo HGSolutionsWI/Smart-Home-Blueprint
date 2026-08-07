@@ -91,6 +91,52 @@ export const discoveryQuestions: readonly BlueprintQuestion[] = [
         "Square footage alone does not determine Wi-Fi performance, but it provides a useful starting point before floor plans and construction materials are reviewed.",
     },
   },
+
+  {
+    id: "finishedLevels",
+    sessionId: "discovery",
+    type: "single-select",
+    title: "How many finished levels does your home have?",
+    description:
+      "Include finished living levels that will require technology coverage. Count a finished basement as a level.",
+    required: true,
+    options: [
+      {
+        id: "1",
+        icon: "1️⃣",
+        title: "1 Level",
+        description:
+          "A single-level home generally simplifies network coverage and cable pathways.",
+      },
+      {
+        id: "2",
+        icon: "2️⃣",
+        title: "2 Levels",
+        description:
+          "Two-level homes require planning for vertical pathways and coverage between floors.",
+      },
+      {
+        id: "3",
+        icon: "3️⃣",
+        title: "3 Levels",
+        description:
+          "Three levels typically benefit from more deliberate network and infrastructure planning.",
+      },
+      {
+        id: "4-plus",
+        icon: "🏢",
+        title: "4+ Levels",
+        description:
+          "Multi-level homes often require additional network zones and carefully planned vertical pathways.",
+      },
+    ],
+    defaultGuidance: {
+      consultant:
+        "The number of finished levels helps us understand how technology needs to move vertically through the home. This affects network coverage, cable pathways, equipment placement, and installation complexity.",
+      didYouKnow:
+        "Wi-Fi signals weaken as they pass through floors, especially when those floors contain dense materials, mechanical systems, ductwork, or radiant heating.",
+    },
+  },
 ];
 
 export const projectTypeGuidance = {
