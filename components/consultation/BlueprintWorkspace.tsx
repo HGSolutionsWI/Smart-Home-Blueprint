@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-import { OptionCard } from "@/components/consultation/OptionCard";
+import { QuestionRenderer } from "@/components/consultation/QuestionRenderer";
 import { Card } from "@/components/ui/Card/card";
 import { PrimaryButton } from "@/components/ui/Button/PrimaryButton";
 import {
@@ -10,7 +10,10 @@ import {
   projectTypeGuidance,
 } from "@/data/consultation/discovery";
 import { theme } from "@/lib/constants/theme";
-import type { BlueprintAnswers } from "@/types/blueprint";
+import type {
+  BlueprintAnswer,
+  BlueprintAnswers,
+} from "@/types/blueprint";
 
 const consultationSteps = [
   "Discover Your Home",
@@ -29,7 +32,7 @@ export function BlueprintWorkspace() {
   });
 
   const currentQuestion = discoveryQuestions[questionIndex];
-  const currentAnswer = answers[currentQuestion.id];
+  const currentAnswer = answers[currentQuestion.id] ?? null;
 
   const progress = Math.round(
     ((questionIndex + 1) / discoveryQuestions.length) * 20,
@@ -55,7 +58,7 @@ export function BlueprintWorkspace() {
       currentAnswer !== undefined &&
       currentAnswer !== "");
 
-  function handleAnswer(answer: string) {
+  function handleAnswer(answer: BlueprintAnswer) {
     setAnswers((previousAnswers) => ({
       ...previousAnswers,
       [currentQuestion.id]: answer,
@@ -257,27 +260,11 @@ export function BlueprintWorkspace() {
               </p>
             )}
 
-            {currentQuestion.type === "single-select" &&
-              currentQuestion.options && (
-                <div
-                  style={{
-                    display: "grid",
-                    gap: theme.spacing.md,
-                    marginBottom: theme.spacing.xl,
-                  }}
-                >
-                  {currentQuestion.options.map((option) => (
-                    <OptionCard
-                      key={option.id}
-                      icon={option.icon ?? "✓"}
-                      title={option.title}
-                      description={option.description ?? ""}
-                      selected={currentAnswer === option.id}
-                      onSelect={() => handleAnswer(option.id)}
-                    />
-                  ))}
-                </div>
-              )}
+            <QuestionRenderer
+              question={currentQuestion}
+              answer={currentAnswer}
+              onAnswer={handleAnswer}
+            />
 
             <div
               style={{
