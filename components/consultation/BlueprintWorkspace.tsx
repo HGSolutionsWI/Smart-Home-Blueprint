@@ -13,6 +13,7 @@ import { theme } from "@/lib/constants/theme";
 import type {
   BlueprintAnswer,
   BlueprintAnswers,
+  BlueprintQuestion,
 } from "@/types/blueprint";
 
 const consultationSteps = [
@@ -23,19 +24,67 @@ const consultationSteps = [
   "Build Your Blueprint",
 ];
 
+function questionMatchesCondition(
+  question: BlueprintQuestion,
+  answers: BlueprintAnswers,
+) {
+  if (!question.condition) {
+    return true;
+  }
+
+  const conditionAnswer = answers[question.condition.questionId];
+
+  if (
+    question.condition.equals !== undefined &&
+    conditionAnswer !== question.condition.equals
+  ) {
+    return false;
+  }
+
+  if (question.condition.includes !== undefined) {
+    if (!Array.isArray(conditionAnswer)) {
+      return false;
+    }
+
+    if (!conditionAnswer.includes(question.condition.includes)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 export function BlueprintWorkspace() {
   const [questionIndex, setQuestionIndex] = useState(0);
 
   const [answers, setAnswers] = useState<BlueprintAnswers>({
     projectType: null,
     homeSize: null,
+    finishedLevels: null,
+    outdoorCoverage: null,
+    constructionStage: null,
+    remodelAccess: null,
+    existingHomeAccess: null,
   });
 
-  const currentQuestion = discoveryQuestions[questionIndex];
+  const visibleQuestions = useMemo(
+    () =>
+      discoveryQuestions.filter((question) =>
+        questionMatchesCondition(question, answers),
+      ),
+    [answers],
+  );
+
+  const safeQuestionIndex = Math.min(
+    questionIndex,
+    Math.max(visibleQuestions.length - 1, 0),
+  );
+
+  const currentQuestion = visibleQuestions[safeQuestionIndex];
   const currentAnswer = answers[currentQuestion.id] ?? null;
 
   const progress = Math.round(
-    ((questionIndex + 1) / discoveryQuestions.length) * 20,
+    ((safeQuestionIndex + 1) / visibleQuestions.length) * 20,
   );
 
   const activeGuidance = useMemo(() => {
@@ -53,13 +102,13 @@ export function BlueprintWorkspace() {
   }, [currentAnswer, currentQuestion]);
 
   const hasAnswer = Array.isArray(currentAnswer)
-  ? currentAnswer.length > 0
-  : currentAnswer !== null &&
-    currentAnswer !== undefined &&
-    currentAnswer !== "";
+    ? currentAnswer.length > 0
+    : currentAnswer !== null &&
+      currentAnswer !== undefined &&
+      currentAnswer !== "";
 
-const canContinue =
-  currentQuestion.required === false || hasAnswer;
+  const canContinue =
+    currentQuestion.required === false || hasAnswer;
 
   function handleAnswer(answer: BlueprintAnswer) {
     setAnswers((previousAnswers) => ({
@@ -71,13 +120,13 @@ const canContinue =
   function handleContinue() {
     if (!canContinue) return;
 
-    if (questionIndex < discoveryQuestions.length - 1) {
+    if (safeQuestionIndex < visibleQuestions.length - 1) {
       setQuestionIndex((current) => current + 1);
     }
   }
 
   function handlePrevious() {
-    if (questionIndex > 0) {
+    if (safeQuestionIndex > 0) {
       setQuestionIndex((current) => current - 1);
     }
   }
@@ -194,7 +243,9 @@ const canContinue =
                         fontWeight: 700,
                       }}
                     >
-                      {isActive ? "CURRENT SESSION" : `SESSION ${index + 1}`}
+                      {isActive
+                        ? "CURRENT SESSION"
+                        : `SESSION ${index + 1}`}
                     </span>
 
                     <span
@@ -234,8 +285,8 @@ const canContinue =
                 marginBottom: theme.spacing.md,
               }}
             >
-              DISCOVERY SESSION 1 OF 5 · QUESTION {questionIndex + 1} OF{" "}
-              {discoveryQuestions.length}
+              DISCOVERY SESSION 1 OF 5 · QUESTION{" "}
+              {safeQuestionIndex + 1} OF {visibleQuestions.length}
             </p>
 
             <h1
@@ -307,7 +358,7 @@ const canContinue =
                 flexWrap: "wrap",
               }}
             >
-              {questionIndex > 0 && (
+              {safeQuestionIndex > 0 && (
                 <button
                   type="button"
                   onClick={handlePrevious}
