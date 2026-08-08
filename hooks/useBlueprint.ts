@@ -7,43 +7,54 @@ import type {
   BlueprintAnswer,
   BlueprintAnswers,
   BlueprintQuestion,
+  QuestionConditionRule,
 } from "@/types/blueprint";
+
+function ruleMatches(
+  rule: QuestionConditionRule,
+  answers: BlueprintAnswers,
+): boolean {
+  const answer = answers[rule.questionId];
+
+  if (rule.equals !== undefined) {
+    return answer === rule.equals;
+  }
+
+  if (rule.includes !== undefined) {
+    return Array.isArray(answer) && answer.includes(rule.includes);
+  }
+
+  return false;
+}
 
 function questionMatchesCondition(
   question: BlueprintQuestion,
   answers: BlueprintAnswers,
-) {
+): boolean {
   if (!question.condition) {
     return true;
   }
 
-  const conditionAnswer = answers[question.condition.questionId];
+  const { rules, operator = "AND" } = question.condition;
 
-  if (
-    question.condition.equals !== undefined &&
-    conditionAnswer !== question.condition.equals
-  ) {
-    return false;
+  if (!rules || rules.length === 0) {
+    return true;
   }
 
-  if (question.condition.includes !== undefined) {
-    if (!Array.isArray(conditionAnswer)) {
-      return false;
-    }
-
-    if (!conditionAnswer.includes(question.condition.includes)) {
-      return false;
-    }
+  if (operator === "OR") {
+    return rules.some((rule) => ruleMatches(rule, answers));
   }
 
-  return true;
+  return rules.every((rule) => ruleMatches(rule, answers));
 }
 
 function clearHiddenAnswers(
   answers: BlueprintAnswers,
   questions: readonly BlueprintQuestion[],
 ): BlueprintAnswers {
-  const cleanedAnswers = { ...answers };
+  const cleanedAnswers: BlueprintAnswers = {
+    ...answers,
+  };
 
   questions.forEach((question) => {
     if (
@@ -65,13 +76,11 @@ export function useBlueprint() {
 
   const currentSession = blueprintSessions[sessionIndex];
 
-  const visibleQuestions = useMemo(
-    () =>
-      currentSession.questions.filter((question) =>
-        questionMatchesCondition(question, answers),
-      ),
-    [currentSession, answers],
-  );
+  const visibleQuestions = useMemo(() => {
+    return currentSession.questions.filter((question) =>
+      questionMatchesCondition(question, answers),
+    );
+  }, [currentSession, answers]);
 
   const safeQuestionIndex = Math.min(
     questionIndex,
@@ -79,6 +88,7 @@ export function useBlueprint() {
   );
 
   const currentQuestion = visibleQuestions[safeQuestionIndex];
+
   const currentAnswer = currentQuestion
     ? answers[currentQuestion.id] ?? null
     : null;
@@ -109,7 +119,9 @@ export function useBlueprint() {
   );
 
   function answerQuestion(answer: BlueprintAnswer) {
-    if (!currentQuestion) return;
+    if (!currentQuestion) {
+      return;
+    }
 
     setAnswers((previousAnswers) => {
       const updatedAnswers: BlueprintAnswers = {
@@ -126,7 +138,9 @@ export function useBlueprint() {
   }
 
   function nextQuestion() {
-    if (!currentQuestion || !canContinue) return;
+    if (!currentQuestion || !canContinue) {
+      return;
+    }
 
     if (safeQuestionIndex < visibleQuestions.length - 1) {
       setQuestionIndex((current) => current + 1);
@@ -149,11 +163,13 @@ export function useBlueprint() {
       const previousSessionIndex = sessionIndex - 1;
       const previousSession = blueprintSessions[previousSessionIndex];
 
-      const previousVisibleQuestions = previousSession.questions.filter(
-        (question) => questionMatchesCondition(question, answers),
-      );
+      const previousVisibleQuestions =
+        previousSession.questions.filter((question) =>
+          questionMatchesCondition(question, answers),
+        );
 
       setSessionIndex(previousSessionIndex);
+
       setQuestionIndex(
         Math.max(previousVisibleQuestions.length - 1, 0),
       );

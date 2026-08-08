@@ -4,12 +4,26 @@ export type QuestionType =
   | "number"
   | "text"
   | "yes-no";
-export type QuestionCondition = {
+
+export type ConditionOperator = "AND" | "OR";
+
+export type QuestionConditionRule = {
   questionId: string;
   equals?: string | number | boolean;
   includes?: string;
 };
-export type BlueprintAnswer = string | string[] | number | boolean | null;
+
+export type QuestionCondition = {
+  operator?: ConditionOperator;
+  rules: readonly QuestionConditionRule[];
+};
+
+export type BlueprintAnswer =
+  | string
+  | string[]
+  | number
+  | boolean
+  | null;
 
 export type QuestionOption = {
   id: string;

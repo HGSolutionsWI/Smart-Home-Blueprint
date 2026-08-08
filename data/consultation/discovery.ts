@@ -225,9 +225,13 @@ export const discoveryQuestions: readonly BlueprintQuestion[] = [
       "Choose the stage that best describes your project today.",
     required: true,
     condition: {
+  rules: [
+    {
       questionId: "projectType",
       equals: "new-construction",
     },
+  ],
+},
     options: [
       {
         id: "planning",
@@ -282,9 +286,13 @@ export const discoveryQuestions: readonly BlueprintQuestion[] = [
       "Select every condition that applies to the areas being remodeled.",
     required: true,
     condition: {
+  rules: [
+    {
       questionId: "projectType",
       equals: "remodel-addition",
     },
+  ],
+},
     options: [
       {
         id: "walls-open",
@@ -339,9 +347,13 @@ export const discoveryQuestions: readonly BlueprintQuestion[] = [
       "Select every access condition that could help an installer route cable.",
     required: true,
     condition: {
+  rules: [
+    {
       questionId: "projectType",
       equals: "existing-home",
     },
+  ],
+},
     options: [
       {
         id: "unfinished-basement",
