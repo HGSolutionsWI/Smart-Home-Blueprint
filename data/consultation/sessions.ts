@@ -1,4 +1,5 @@
 import { discoveryQuestions } from "@/data/consultation/discovery";
+import { infrastructureQuestions } from "@/data/consultation/infrastructure";
 import { lifestyleQuestions } from "@/data/consultation/lifestyle";
 
 export const blueprintSessions = [
@@ -15,5 +16,12 @@ export const blueprintSessions = [
     description:
       "Understand how the household works, entertains, travels, uses technology, values privacy, and prioritizes reliability, convenience, and security.",
     questions: lifestyleQuestions,
+  },
+  {
+    id: "infrastructure",
+    title: "Design Your Infrastructure",
+    description:
+      "Translate the home and lifestyle requirements into structured wiring, network, pathway, rack, security, audio, power, and future-ready infrastructure decisions.",
+    questions: infrastructureQuestions,
   },
 ] as const;
