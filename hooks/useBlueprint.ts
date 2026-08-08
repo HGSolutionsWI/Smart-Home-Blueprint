@@ -1,8 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { blueprintSessions } from "@/data/consultation/sessions";
+import {
+  loadBlueprintProject,
+  saveBlueprintProject,
+} from "@/lib/blueprint/storage";
 import type {
   BlueprintAnswer,
   BlueprintAnswers,
@@ -71,8 +75,25 @@ function clearHiddenAnswers(
 export function useBlueprint() {
   const [sessionIndex, setSessionIndex] = useState(0);
   const [questionIndex, setQuestionIndex] = useState(0);
-
   const [answers, setAnswers] = useState<BlueprintAnswers>({});
+  const [hasLoadedStorage, setHasLoadedStorage] = useState(false);
+
+  useEffect(() => {
+    const storedProject = loadBlueprintProject();
+
+    if (storedProject) {
+      setAnswers(storedProject.answers);
+      setSessionIndex(
+        Math.min(
+          storedProject.sessionIndex,
+          blueprintSessions.length - 1,
+        ),
+      );
+      setQuestionIndex(Math.max(storedProject.questionIndex, 0));
+    }
+
+    setHasLoadedStorage(true);
+  }, []);
 
   const currentSession = blueprintSessions[sessionIndex];
 
@@ -117,6 +138,23 @@ export function useBlueprint() {
       blueprintSessions.length) *
       100,
   );
+
+  useEffect(() => {
+    if (!hasLoadedStorage) {
+      return;
+    }
+
+    saveBlueprintProject({
+      answers,
+      sessionIndex,
+      questionIndex: safeQuestionIndex,
+    });
+  }, [
+    answers,
+    sessionIndex,
+    safeQuestionIndex,
+    hasLoadedStorage,
+  ]);
 
   function answerQuestion(answer: BlueprintAnswer) {
     if (!currentQuestion) {
@@ -192,6 +230,7 @@ export function useBlueprint() {
     overallProgress,
 
     canContinue,
+    hasLoadedStorage,
 
     answerQuestion,
     nextQuestion,
