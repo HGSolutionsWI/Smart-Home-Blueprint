@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { buildBlueprintDesignGaps } from "@/lib/blueprint/designGaps";
 import { buildBlueprintRecommendations } from "@/lib/blueprint/recommendations";
 import {
   loadBlueprintProject,
@@ -9,11 +10,18 @@ import {
 } from "@/lib/blueprint/storage";
 import { theme } from "@/lib/constants/theme";
 
-const priorityOrder = {
+const recommendationPriorityOrder = {
   critical: 0,
   high: 1,
   recommended: 2,
   consider: 3,
+} as const;
+
+const gapSeverityOrder = {
+  critical: 0,
+  high: 1,
+  medium: 2,
+  low: 3,
 } as const;
 
 const categoryOrder = [
@@ -118,6 +126,10 @@ export default function BlueprintResultsPage() {
     project.answers,
   );
 
+  const designGaps = buildBlueprintDesignGaps(
+    project.answers,
+  );
+
   const answeredEntries = Object.entries(project.answers).filter(
     ([, answer]) => {
       if (
@@ -155,10 +167,24 @@ export default function BlueprintResultsPage() {
   Object.values(groupedRecommendations).forEach((group) => {
     group.sort(
       (a, b) =>
-        priorityOrder[a.priority] -
-        priorityOrder[b.priority],
+        recommendationPriorityOrder[a.priority] -
+        recommendationPriorityOrder[b.priority],
     );
   });
+
+  const sortedDesignGaps = [...designGaps].sort(
+    (a, b) =>
+      gapSeverityOrder[a.severity] -
+      gapSeverityOrder[b.severity],
+  );
+
+  const criticalGapCount = designGaps.filter(
+    (gap) => gap.severity === "critical",
+  ).length;
+
+  const highGapCount = designGaps.filter(
+    (gap) => gap.severity === "high",
+  ).length;
 
   return (
     <main
@@ -208,12 +234,12 @@ export default function BlueprintResultsPage() {
               color: theme.colors.textLight,
               fontSize: "1.1rem",
               lineHeight: 1.7,
-              maxWidth: "760px",
+              maxWidth: "820px",
             }}
           >
-            Your consultation is complete. These recommendations were
-            generated from the requirements, priorities, and preferences
-            captured during your five design sessions.
+            Your consultation is complete. This Blueprint evaluates your
+            project requirements, identifies design gaps, and provides
+            recommendations based on the five design sessions.
           </p>
         </header>
 
@@ -318,6 +344,37 @@ export default function BlueprintResultsPage() {
               {recommendations.length}
             </p>
           </div>
+
+          <div
+            style={{
+              background: theme.colors.surface,
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: theme.radius.large,
+              padding: theme.spacing.lg,
+            }}
+          >
+            <p
+              style={{
+                marginTop: 0,
+                color: theme.colors.textLight,
+                fontSize: "0.8rem",
+                fontWeight: 800,
+              }}
+            >
+              ATTENTION ITEMS
+            </p>
+
+            <p
+              style={{
+                margin: 0,
+                color: theme.colors.primaryDark,
+                fontSize: "1.5rem",
+                fontWeight: 800,
+              }}
+            >
+              {designGaps.length}
+            </p>
+          </div>
         </section>
 
         <section
@@ -355,13 +412,248 @@ export default function BlueprintResultsPage() {
               color: theme.colors.text,
               lineHeight: 1.7,
               marginBottom: 0,
-              maxWidth: "820px",
+              maxWidth: "840px",
             }}
           >
             The recommendations below interpret combinations of your
             project conditions, household priorities, infrastructure
             choices, technology preferences, and implementation goals.
+            Attention items identify conflicts, missing infrastructure,
+            unresolved decisions, or conditions that should be addressed
+            before installation.
           </p>
+        </section>
+
+        <section
+          style={{
+            marginBottom: theme.spacing.xl,
+          }}
+        >
+          <div
+            style={{
+              marginBottom: theme.spacing.md,
+            }}
+          >
+            <p
+              style={{
+                color: theme.colors.warning,
+                fontWeight: 800,
+                fontSize: "0.75rem",
+                letterSpacing: "0.1em",
+                marginTop: 0,
+                marginBottom: theme.spacing.xs,
+              }}
+            >
+              ATTENTION REQUIRED
+            </p>
+
+            <h2
+              style={{
+                color: theme.colors.primaryDark,
+                marginTop: 0,
+                marginBottom: theme.spacing.sm,
+              }}
+            >
+              Design Gaps & Open Issues
+            </h2>
+
+            <p
+              style={{
+                color: theme.colors.textLight,
+                lineHeight: 1.7,
+                maxWidth: "820px",
+                marginBottom: 0,
+              }}
+            >
+              These items represent mismatches between stated priorities
+              and the current design, unresolved project conditions, or
+              infrastructure decisions that should be reviewed.
+            </p>
+          </div>
+
+          {sortedDesignGaps.length === 0 ? (
+            <div
+              style={{
+                background: theme.colors.surface,
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: theme.radius.large,
+                padding: theme.spacing.xl,
+              }}
+            >
+              <p
+                style={{
+                  color: theme.colors.primaryDark,
+                  fontWeight: 800,
+                  marginTop: 0,
+                  marginBottom: theme.spacing.sm,
+                }}
+              >
+                No major design gaps detected.
+              </p>
+
+              <p
+                style={{
+                  color: theme.colors.text,
+                  lineHeight: 1.7,
+                  margin: 0,
+                }}
+              >
+                The current consultation answers and infrastructure choices
+                are generally aligned. Normal installer verification and
+                project coordination are still recommended.
+              </p>
+            </div>
+          ) : (
+            <>
+              {(criticalGapCount > 0 || highGapCount > 0) && (
+                <div
+                  style={{
+                    background: "#FFF7ED",
+                    border: `1px solid ${theme.colors.warning}`,
+                    borderRadius: theme.radius.large,
+                    padding: theme.spacing.lg,
+                    marginBottom: theme.spacing.md,
+                  }}
+                >
+                  <p
+                    style={{
+                      color: theme.colors.primaryDark,
+                      fontWeight: 800,
+                      marginTop: 0,
+                      marginBottom: theme.spacing.xs,
+                    }}
+                  >
+                    Pre-Installation Review Recommended
+                  </p>
+
+                  <p
+                    style={{
+                      color: theme.colors.text,
+                      lineHeight: 1.7,
+                      margin: 0,
+                    }}
+                  >
+                    This Blueprint contains {criticalGapCount} critical and{" "}
+                    {highGapCount} high-priority attention item
+                    {criticalGapCount + highGapCount === 1 ? "" : "s"} that
+                    should be resolved before the project is treated as
+                    installation-ready.
+                  </p>
+                </div>
+              )}
+
+              <div
+                style={{
+                  display: "grid",
+                  gap: theme.spacing.md,
+                }}
+              >
+                {sortedDesignGaps.map((gap) => (
+                  <article
+                    key={gap.id}
+                    style={{
+                      background: theme.colors.surface,
+                      border: `1px solid ${
+                        gap.severity === "critical" ||
+                        gap.severity === "high"
+                          ? theme.colors.warning
+                          : theme.colors.border
+                      }`,
+                      borderRadius: theme.radius.large,
+                      padding: theme.spacing.lg,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: theme.spacing.sm,
+                        flexWrap: "wrap",
+                        marginBottom: theme.spacing.sm,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "0.75rem",
+                          fontWeight: 800,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.08em",
+                          color:
+                            gap.severity === "critical" ||
+                            gap.severity === "high"
+                              ? theme.colors.warning
+                              : theme.colors.primary,
+                        }}
+                      >
+                        {gap.severity}
+                      </span>
+
+                      <span
+                        style={{
+                          fontSize: "0.75rem",
+                          fontWeight: 800,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.08em",
+                          color: theme.colors.textLight,
+                        }}
+                      >
+                        Attention Required
+                      </span>
+                    </div>
+
+                    <h3
+                      style={{
+                        color: theme.colors.primaryDark,
+                        marginTop: 0,
+                        marginBottom: theme.spacing.sm,
+                      }}
+                    >
+                      {gap.title}
+                    </h3>
+
+                    <p
+                      style={{
+                        color: theme.colors.text,
+                        lineHeight: 1.7,
+                        marginTop: 0,
+                        marginBottom: theme.spacing.md,
+                      }}
+                    >
+                      {gap.issue}
+                    </p>
+
+                    <div
+                      style={{
+                        borderLeft: `4px solid ${theme.colors.warning}`,
+                        paddingLeft: theme.spacing.md,
+                      }}
+                    >
+                      <p
+                        style={{
+                          color: theme.colors.primaryDark,
+                          fontWeight: 800,
+                          marginTop: 0,
+                          marginBottom: theme.spacing.xs,
+                        }}
+                      >
+                        Resolve Before Installation
+                      </p>
+
+                      <p
+                        style={{
+                          color: theme.colors.text,
+                          lineHeight: 1.7,
+                          margin: 0,
+                        }}
+                      >
+                        {gap.action}
+                      </p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </>
+          )}
         </section>
 
         {recommendations.length === 0 ? (
@@ -553,7 +845,8 @@ export default function BlueprintResultsPage() {
             }}
           >
             This remains visible temporarily while we validate that each
-            recommendation aligns with the actual consultation answers.
+            recommendation and design-gap finding matches the actual
+            consultation answers.
           </p>
 
           <pre

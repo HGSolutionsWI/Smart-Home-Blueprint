@@ -100,3 +100,17 @@ export type BlueprintRecommendation = {
   rationale: string;
   action: string;
 };
+
+export type BlueprintDesignGapSeverity =
+  | "critical"
+  | "high"
+  | "medium"
+  | "low";
+
+export type BlueprintDesignGap = {
+  id: string;
+  severity: BlueprintDesignGapSeverity;
+  title: string;
+  issue: string;
+  action: string;
+};
