@@ -39,6 +39,23 @@ function questionMatchesCondition(
   return true;
 }
 
+function clearHiddenAnswers(
+  answers: BlueprintAnswers,
+): BlueprintAnswers {
+  const cleanedAnswers = { ...answers };
+
+  discoveryQuestions.forEach((question) => {
+    if (
+      question.condition &&
+      !questionMatchesCondition(question, cleanedAnswers)
+    ) {
+      cleanedAnswers[question.id] = null;
+    }
+  });
+
+  return cleanedAnswers;
+}
+
 export function useBlueprint() {
   const [questionIndex, setQuestionIndex] = useState(0);
 
@@ -82,10 +99,14 @@ export function useBlueprint() {
     currentQuestion.required === false || hasAnswer;
 
   function answerQuestion(answer: BlueprintAnswer) {
-    setAnswers((previousAnswers) => ({
-      ...previousAnswers,
-      [currentQuestion.id]: answer,
-    }));
+    setAnswers((previousAnswers) => {
+      const updatedAnswers: BlueprintAnswers = {
+        ...previousAnswers,
+        [currentQuestion.id]: answer,
+      };
+
+      return clearHiddenAnswers(updatedAnswers);
+    });
   }
 
   function nextQuestion() {
