@@ -42,15 +42,16 @@ function questionMatchesCondition(
 export function useBlueprint() {
   const [questionIndex, setQuestionIndex] = useState(0);
 
-  const [answers, setAnswers] = useState<BlueprintAnswers>({
-    projectType: null,
-    homeSize: null,
-    finishedLevels: null,
-    outdoorCoverage: null,
-    constructionStage: null,
-    remodelAccess: null,
-    existingHomeAccess: null,
-  });
+const [answers, setAnswers] = useState<BlueprintAnswers>({
+  projectType: null,
+  homeSize: null,
+  finishedLevels: null,
+  outdoorCoverage: null,
+  constructionStage: null,
+  remodelAccess: null,
+  existingHomeAccess: null,
+  existingStructuredWiring: null,
+});
 
   const visibleQuestions = useMemo(
     () =>

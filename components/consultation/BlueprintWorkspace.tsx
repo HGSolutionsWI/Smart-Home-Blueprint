@@ -1,20 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
-
 import { QuestionRenderer } from "@/components/consultation/QuestionRenderer";
 import { Card } from "@/components/ui/Card/card";
 import { PrimaryButton } from "@/components/ui/Button/PrimaryButton";
-import {
-  discoveryQuestions,
-  projectTypeGuidance,
-} from "@/data/consultation/discovery";
+import { projectTypeGuidance } from "@/data/consultation/discovery";
+import { useBlueprint } from "@/hooks/useBlueprint";
 import { theme } from "@/lib/constants/theme";
-import type {
-  BlueprintAnswer,
-  BlueprintAnswers,
-  BlueprintQuestion,
-} from "@/types/blueprint";
 
 const consultationSteps = [
   "Discover Your Home",
@@ -24,112 +15,28 @@ const consultationSteps = [
   "Build Your Blueprint",
 ];
 
-function questionMatchesCondition(
-  question: BlueprintQuestion,
-  answers: BlueprintAnswers,
-) {
-  if (!question.condition) {
-    return true;
-  }
-
-  const conditionAnswer = answers[question.condition.questionId];
-
-  if (
-    question.condition.equals !== undefined &&
-    conditionAnswer !== question.condition.equals
-  ) {
-    return false;
-  }
-
-  if (question.condition.includes !== undefined) {
-    if (!Array.isArray(conditionAnswer)) {
-      return false;
-    }
-
-    if (!conditionAnswer.includes(question.condition.includes)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 export function BlueprintWorkspace() {
-  const [questionIndex, setQuestionIndex] = useState(0);
+  const {
+    answers,
+    currentAnswer,
+    currentQuestion,
+    visibleQuestions,
+    safeQuestionIndex,
+    progress,
+    canContinue,
+    answerQuestion,
+    nextQuestion,
+    previousQuestion,
+  } = useBlueprint();
 
-  const [answers, setAnswers] = useState<BlueprintAnswers>({
-    projectType: null,
-    homeSize: null,
-    finishedLevels: null,
-    outdoorCoverage: null,
-    constructionStage: null,
-    remodelAccess: null,
-    existingHomeAccess: null,
-  });
-
-  const visibleQuestions = useMemo(
-    () =>
-      discoveryQuestions.filter((question) =>
-        questionMatchesCondition(question, answers),
-      ),
-    [answers],
-  );
-
-  const safeQuestionIndex = Math.min(
-    questionIndex,
-    Math.max(visibleQuestions.length - 1, 0),
-  );
-
-  const currentQuestion = visibleQuestions[safeQuestionIndex];
-  const currentAnswer = answers[currentQuestion.id] ?? null;
-
-  const progress = Math.round(
-    ((safeQuestionIndex + 1) / visibleQuestions.length) * 20,
-  );
-
-  const activeGuidance = useMemo(() => {
-    if (
-      currentQuestion.id === "projectType" &&
-      typeof currentAnswer === "string" &&
-      currentAnswer in projectTypeGuidance
-    ) {
-      return projectTypeGuidance[
+  const activeGuidance =
+  currentQuestion.id === "projectType" &&
+  typeof currentAnswer === "string" &&
+  currentAnswer in projectTypeGuidance
+    ? projectTypeGuidance[
         currentAnswer as keyof typeof projectTypeGuidance
-      ];
-    }
-
-    return currentQuestion.defaultGuidance;
-  }, [currentAnswer, currentQuestion]);
-
-  const hasAnswer = Array.isArray(currentAnswer)
-    ? currentAnswer.length > 0
-    : currentAnswer !== null &&
-      currentAnswer !== undefined &&
-      currentAnswer !== "";
-
-  const canContinue =
-    currentQuestion.required === false || hasAnswer;
-
-  function handleAnswer(answer: BlueprintAnswer) {
-    setAnswers((previousAnswers) => ({
-      ...previousAnswers,
-      [currentQuestion.id]: answer,
-    }));
-  }
-
-  function handleContinue() {
-    if (!canContinue) return;
-
-    if (safeQuestionIndex < visibleQuestions.length - 1) {
-      setQuestionIndex((current) => current + 1);
-    }
-  }
-
-  function handlePrevious() {
-    if (safeQuestionIndex > 0) {
-      setQuestionIndex((current) => current - 1);
-    }
-  }
+      ]
+    : currentQuestion.defaultGuidance;
 
   return (
     <main
@@ -317,7 +224,7 @@ export function BlueprintWorkspace() {
             <QuestionRenderer
               question={currentQuestion}
               answer={currentAnswer}
-              onAnswer={handleAnswer}
+              onAnswer={answerQuestion}
             />
 
             <div
@@ -361,7 +268,7 @@ export function BlueprintWorkspace() {
               {safeQuestionIndex > 0 && (
                 <button
                   type="button"
-                  onClick={handlePrevious}
+                  onClick={previousQuestion}
                   style={{
                     background: theme.colors.surface,
                     color: theme.colors.primaryDark,
@@ -379,7 +286,7 @@ export function BlueprintWorkspace() {
 
               <PrimaryButton
                 disabled={!canContinue}
-                onClick={handleContinue}
+                onClick={nextQuestion}
                 style={{
                   opacity: canContinue ? 1 : 0.55,
                   cursor: canContinue ? "pointer" : "not-allowed",
@@ -416,6 +323,37 @@ export function BlueprintWorkspace() {
             >
               {activeGuidance.didYouKnow}
             </p>
+          </Card>
+
+          <Card
+            style={{
+              marginTop: theme.spacing.lg,
+              background: "#111827",
+              color: "#FFFFFF",
+            }}
+          >
+            <p
+              style={{
+                marginTop: 0,
+                marginBottom: theme.spacing.sm,
+                fontWeight: 800,
+                color: "#93C5FD",
+              }}
+            >
+              Developer Answer Inspector
+            </p>
+
+            <pre
+              style={{
+                margin: 0,
+                overflowX: "auto",
+                whiteSpace: "pre-wrap",
+                fontSize: "0.8rem",
+                lineHeight: 1.6,
+              }}
+            >
+              {JSON.stringify(answers, null, 2)}
+            </pre>
           </Card>
         </section>
       </div>

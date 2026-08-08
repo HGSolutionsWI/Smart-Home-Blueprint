@@ -81,6 +81,35 @@ export function QuestionRenderer({
     );
   }
 
+  if (question.type === "yes-no") {
+    return (
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+          gap: theme.spacing.md,
+          marginBottom: theme.spacing.xl,
+        }}
+      >
+        <OptionCard
+          icon="✓"
+          title="Yes"
+          description="Yes, this applies to my project."
+          selected={answer === true}
+          onSelect={() => onAnswer(true)}
+        />
+
+        <OptionCard
+          icon="✕"
+          title="No"
+          description="No, this does not apply to my project."
+          selected={answer === false}
+          onSelect={() => onAnswer(false)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       style={{

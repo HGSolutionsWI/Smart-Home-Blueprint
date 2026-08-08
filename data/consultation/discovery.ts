@@ -1,4 +1,7 @@
-import type { BlueprintQuestion } from "@/types/blueprint";
+import type {
+  BlueprintQuestion,
+  ConsultantGuidance,
+} from "@/types/blueprint";
 
 export const discoveryQuestions: readonly BlueprintQuestion[] = [
   {
@@ -390,16 +393,35 @@ export const discoveryQuestions: readonly BlueprintQuestion[] = [
           "Most pathways are finished and concealed.",
       },
     ],
-    defaultGuidance: {
+        defaultGuidance: {
       consultant:
         "Existing homes can still support excellent wired infrastructure, but access conditions strongly affect labor, feasibility, and budget confidence.",
       didYouKnow:
         "A short installer pathway walkthrough can dramatically improve the accuracy of a retrofit budget.",
     },
   },
+
+  {
+    id: "existingStructuredWiring",
+    sessionId: "discovery",
+    type: "yes-no",
+    title: "Does your home already have structured wiring?",
+    description:
+      "This may include Ethernet, Cat5e, Cat6, coax, speaker wire, security wire, or other low-voltage cabling installed throughout the home.",
+    required: true,
+    defaultGuidance: {
+      consultant:
+        "Existing structured wiring can be extremely valuable. Even older cabling may provide usable pathways or infrastructure that can reduce installation work.",
+      didYouKnow:
+        "Existing Ethernet cabling does not necessarily need to be replaced just because it is older. Its condition, category, termination, and intended use should be evaluated before deciding whether replacement is necessary.",
+    },
+  },
 ];
 
-export const projectTypeGuidance = {
+export const projectTypeGuidance: Record<
+  "new-construction" | "remodel-addition" | "existing-home",
+  ConsultantGuidance
+> = {
   "new-construction": {
     consultant:
       "Excellent timing. Since the walls are open, we can prioritize wiring, conduit, equipment locations, and future expansion before those decisions become expensive to change.",
@@ -418,6 +440,6 @@ export const projectTypeGuidance = {
     consultant:
       "No problem. We will focus on practical routes through attics, basements, crawl spaces, closets, existing conduit, and selective drywall access where needed.",
     didYouKnow:
-      "A finished home can still support excellent wired technology, but installer pathway review becomes much more important.",
+      "A finished home can still support excellent wired infrastructure, but installer pathway review becomes much more important.",
   },
-} as const;
+};
