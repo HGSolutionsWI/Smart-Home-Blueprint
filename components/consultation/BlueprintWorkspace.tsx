@@ -1,5 +1,5 @@
 "use client";
-
+import { useRouter } from "next/navigation";
 import { QuestionRenderer } from "@/components/consultation/QuestionRenderer";
 import { Card } from "@/components/ui/Card/card";
 import { PrimaryButton } from "@/components/ui/Button/PrimaryButton";
@@ -9,6 +9,8 @@ import { useBlueprint } from "@/hooks/useBlueprint";
 import { theme } from "@/lib/constants/theme";
 
 export function BlueprintWorkspace() {
+  const router = useRouter();
+
   const {
     answers,
     sessionIndex,
@@ -24,6 +26,23 @@ export function BlueprintWorkspace() {
     nextQuestion,
     previousQuestion,
   } = useBlueprint();
+
+  const isFinalQuestion =
+  sessionIndex === blueprintSessions.length - 1 &&
+  safeQuestionIndex === visibleQuestions.length - 1;
+
+function handleContinue() {
+  if (!canContinue) {
+    return;
+  }
+
+  if (isFinalQuestion) {
+    router.push("/blueprint/results");
+    return;
+  }
+
+  nextQuestion();
+}
 
   const activeGuidance =
     currentQuestion.id === "projectType" &&
@@ -44,11 +63,11 @@ export function BlueprintWorkspace() {
     safeQuestionIndex === visibleQuestions.length - 1;
 
   const continueLabel =
-    isLastSession && isLastQuestion
-      ? "Complete Session"
-      : isLastQuestion
-        ? "Continue to Next Session"
-        : "Continue";
+  isLastSession && isLastQuestion
+    ? "Build My Blueprint"
+    : isLastQuestion
+      ? "Continue to Next Session"
+      : "Continue";
 
   return (
     <main
@@ -364,7 +383,7 @@ export function BlueprintWorkspace() {
 
               <PrimaryButton
                 disabled={!canContinue}
-                onClick={nextQuestion}
+                onClick={handleContinue}
                 style={{
                   opacity: canContinue ? 1 : 0.55,
                   cursor: canContinue ? "pointer" : "not-allowed",
