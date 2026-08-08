@@ -51,6 +51,7 @@ const [answers, setAnswers] = useState<BlueprintAnswers>({
   remodelAccess: null,
   existingHomeAccess: null,
   existingStructuredWiring: null,
+  internetEntry: null,
 });
 
   const visibleQuestions = useMemo(

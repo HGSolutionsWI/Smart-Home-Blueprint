@@ -393,7 +393,7 @@ export const discoveryQuestions: readonly BlueprintQuestion[] = [
           "Most pathways are finished and concealed.",
       },
     ],
-        defaultGuidance: {
+    defaultGuidance: {
       consultant:
         "Existing homes can still support excellent wired infrastructure, but access conditions strongly affect labor, feasibility, and budget confidence.",
       didYouKnow:
@@ -414,6 +414,73 @@ export const discoveryQuestions: readonly BlueprintQuestion[] = [
         "Existing structured wiring can be extremely valuable. Even older cabling may provide usable pathways or infrastructure that can reduce installation work.",
       didYouKnow:
         "Existing Ethernet cabling does not necessarily need to be replaced just because it is older. Its condition, category, termination, and intended use should be evaluated before deciding whether replacement is necessary.",
+    },
+  },
+
+  {
+    id: "internetEntry",
+    sessionId: "discovery",
+    type: "single-select",
+    title: "Where does internet service enter the home?",
+    description:
+      "Choose the location that best describes the current or planned internet service entry point.",
+    required: true,
+    options: [
+      {
+        id: "basement-mechanical",
+        icon: "⬇️",
+        title: "Basement or Mechanical Room",
+        description:
+          "A centralized utility area can be a strong starting point for network equipment and structured wiring.",
+      },
+      {
+        id: "utility-room",
+        icon: "🔧",
+        title: "Utility Room",
+        description:
+          "Internet service enters near other building systems or utility equipment.",
+      },
+      {
+        id: "garage",
+        icon: "🚗",
+        title: "Garage",
+        description:
+          "The service enters through the garage or near garage utility equipment.",
+      },
+      {
+        id: "living-space-office",
+        icon: "💻",
+        title: "Living Space or Office",
+        description:
+          "The modem or gateway is currently located in a finished living area.",
+      },
+      {
+        id: "exterior-demarcation",
+        icon: "🏠",
+        title: "Exterior Wall or Utility Demarcation",
+        description:
+          "Service reaches the exterior of the home, but the interior equipment location may still need to be planned.",
+      },
+      {
+        id: "not-sure",
+        icon: "❓",
+        title: "Not Sure",
+        description:
+          "We will flag the service entry point for confirmation during installer or builder coordination.",
+      },
+      {
+        id: "not-installed",
+        icon: "📝",
+        title: "Not Installed Yet",
+        description:
+          "The internet service entry point has not yet been established.",
+      },
+    ],
+    defaultGuidance: {
+      consultant:
+        "The internet service entry point helps us understand where the home's network begins. From there, we can evaluate whether the modem, gateway, rack, and distribution equipment should remain nearby or be relocated to a better central location.",
+      didYouKnow:
+        "The best location for your internet provider's modem is not always the best location for your home's network equipment. A planned equipment location can improve serviceability, expansion, cooling, and cable organization.",
     },
   },
 ];
