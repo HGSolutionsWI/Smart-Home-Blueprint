@@ -464,9 +464,9 @@ export const discoveryQuestions: readonly BlueprintQuestion[] = [
       {
         id: "not-sure",
         icon: "❓",
-        title: "Not Sure",
+        title: "Unknown / Unsure",
         description:
-          "We will flag the service entry point for confirmation during installer or builder coordination.",
+          "The service entry point is not currently known.",
       },
       {
         id: "not-installed",
@@ -481,6 +481,467 @@ export const discoveryQuestions: readonly BlueprintQuestion[] = [
         "The internet service entry point helps us understand where the home's network begins. From there, we can evaluate whether the modem, gateway, rack, and distribution equipment should remain nearby or be relocated to a better central location.",
       didYouKnow:
         "The best location for your internet provider's modem is not always the best location for your home's network equipment. A planned equipment location can improve serviceability, expansion, cooling, and cable organization.",
+    },
+  },
+
+  {
+    id: "preferredEquipmentLocation",
+    sessionId: "discovery",
+    type: "single-select",
+    title: "Where would you prefer the home's network and technology equipment to live?",
+    description:
+      "Choose the location you would prefer for networking, control, and related low-voltage equipment.",
+    required: true,
+    options: [
+      {
+        id: "mechanical-room",
+        icon: "⚙️",
+        title: "Mechanical Room",
+        description:
+          "A dedicated mechanical or utility space can provide centralized access to equipment.",
+      },
+      {
+        id: "basement",
+        icon: "⬇️",
+        title: "Basement",
+        description:
+          "A basement can provide a practical central location for racks, switches, and service equipment.",
+      },
+      {
+        id: "utility-closet",
+        icon: "🚪",
+        title: "Utility Closet",
+        description:
+          "A dedicated closet can keep technology organized and out of living spaces.",
+      },
+      {
+        id: "garage",
+        icon: "🚗",
+        title: "Garage",
+        description:
+          "A garage may work if temperature, dust, moisture, power, and serviceability are acceptable.",
+      },
+      {
+        id: "office",
+        icon: "💻",
+        title: "Office",
+        description:
+          "An office may be convenient but can introduce noise, heat, and visible equipment concerns.",
+      },
+      {
+        id: "not-decided",
+        icon: "❓",
+        title: "Unknown / Unsure",
+        description:
+          "The ideal equipment location has not been selected yet.",
+      },
+    ],
+    defaultGuidance: {
+      consultant:
+        "A good equipment location should be accessible, dry, ventilated, near reliable power, and large enough for future expansion.",
+      didYouKnow:
+        "Network racks and control equipment generate heat. A location that seems convenient today may become uncomfortable or difficult to service as the system grows.",
+    },
+  },
+
+  {
+    id: "powerReliability",
+    sessionId: "discovery",
+    type: "single-select",
+    title: "How reliable is electrical power at the property?",
+    description:
+      "Choose the answer that best reflects your experience. For new construction, choose Unknown / Unsure if there is not enough operating history yet.",
+    required: true,
+    options: [
+      {
+        id: "reliable",
+        icon: "⚡",
+        title: "Reliable — Outages Are Rare",
+        description:
+          "Power interruptions are uncommon and generally not a significant concern.",
+      },
+      {
+        id: "occasional",
+        icon: "🌩️",
+        title: "Occasional Outages",
+        description:
+          "The property experiences some outages during storms or utility events.",
+      },
+      {
+        id: "frequent",
+        icon: "🔋",
+        title: "Frequent Outages",
+        description:
+          "Power interruptions happen often enough that backup strategy is important.",
+      },
+      {
+        id: "unknown-unsure",
+        icon: "❓",
+        title: "Unknown / Unsure",
+        description:
+          "You are unsure about power reliability, or this is a new construction project without operating history yet.",
+      },
+    ],
+    defaultGuidance: {
+      consultant:
+        "Power reliability affects how we think about network continuity, cameras, access control, automation, and other systems that may need to remain online during an outage.",
+      didYouKnow:
+        "Even when a home has a generator, networking equipment can still reboot during the delay before generator power becomes available unless a UPS bridges the gap.",
+    },
+  },
+
+  {
+    id: "backupPower",
+    sessionId: "discovery",
+    type: "multi-select",
+    title: "What backup power is currently available or planned?",
+    description:
+      "Select every option that applies. If none are currently available, choose No Backup Power.",
+    required: true,
+    options: [
+      {
+        id: "whole-home-generator",
+        icon: "⚙️",
+        title: "Whole-Home Generator",
+        description:
+          "A permanently installed standby generator supports all or most of the home.",
+      },
+      {
+        id: "portable-generator",
+        icon: "⛽",
+        title: "Portable Generator",
+        description:
+          "A portable generator can support selected circuits during an outage.",
+      },
+      {
+        id: "battery-storage",
+        icon: "🔋",
+        title: "Battery / Energy Storage System",
+        description:
+          "A home battery or energy-storage system provides backup electrical power.",
+      },
+      {
+        id: "ups",
+        icon: "🔌",
+        title: "UPS for Technology Equipment",
+        description:
+          "Network or technology equipment has dedicated short-term battery backup.",
+      },
+      {
+        id: "planned",
+        icon: "📝",
+        title: "Backup Power Is Planned",
+        description:
+          "Backup power is part of the project but has not been installed yet.",
+      },
+      {
+        id: "none",
+        icon: "✕",
+        title: "No Backup Power",
+        description:
+          "The property does not currently have a backup power system.",
+      },
+    ],
+    defaultGuidance: {
+      consultant:
+        "Backup power can protect far more than internet access. Cameras, network switches, access control, automation, and communication devices may all depend on the same technology infrastructure.",
+      didYouKnow:
+        "A modest UPS protecting core networking equipment can often keep internet and Wi-Fi operating through short power interruptions.",
+    },
+  },
+
+  {
+    id: "floorPlansAvailable",
+    sessionId: "discovery",
+    type: "yes-no",
+    title: "Do you have floor plans available?",
+    description:
+      "Floor plans can improve room planning, device placement, cable-pathway discussions, and future AI-assisted design.",
+    required: true,
+    defaultGuidance: {
+      consultant:
+        "Floor plans are extremely useful, but they are not required to continue. If you have them, we can use them later in the Blueprint process for visual planning.",
+      didYouKnow:
+        "Even an older real-estate floor plan can provide useful context for room relationships, approximate device locations, and coverage planning.",
+    },
+  },
+
+  {
+    id: "utilityAccess",
+    sessionId: "discovery",
+    type: "multi-select",
+    title: "Which utility or service areas are available?",
+    description:
+      "Select the areas that exist and could potentially support technology equipment or cable pathways.",
+    required: true,
+    options: [
+      {
+        id: "mechanical-room",
+        icon: "⚙️",
+        title: "Mechanical Room",
+        description:
+          "A dedicated mechanical area may support centralized technology infrastructure.",
+      },
+      {
+        id: "electrical-room-panel",
+        icon: "⚡",
+        title: "Electrical Panel Area",
+        description:
+          "The electrical service area may influence equipment placement and backup-power planning.",
+      },
+      {
+        id: "utility-closet",
+        icon: "🚪",
+        title: "Utility Closet",
+        description:
+          "A utility closet may provide organized space for low-voltage equipment.",
+      },
+      {
+        id: "basement",
+        icon: "⬇️",
+        title: "Basement",
+        description:
+          "Basement access can simplify cable distribution and equipment placement.",
+      },
+      {
+        id: "attic",
+        icon: "⬆️",
+        title: "Attic",
+        description:
+          "Attic access can provide valuable pathways to upper-floor locations.",
+      },
+      {
+        id: "garage",
+        icon: "🚗",
+        title: "Garage",
+        description:
+          "The garage may provide utility access but environmental conditions should be reviewed.",
+      },
+      {
+        id: "none-unknown",
+        icon: "❓",
+        title: "Unknown / Unsure",
+        description:
+          "You are unsure which utility areas may be usable for technology infrastructure.",
+      },
+    ],
+    defaultGuidance: {
+      consultant:
+        "Utility spaces often become the backbone of the technology plan because they can provide power, pathways, service access, and centralized equipment locations.",
+      didYouKnow:
+        "A dedicated low-voltage equipment location does not need to be large, but planning it early can prevent technology from ending up scattered across closets and living spaces.",
+    },
+  },
+
+  {
+    id: "networkCondition",
+    sessionId: "discovery",
+    type: "single-select",
+    title: "How would you describe the home's current network equipment?",
+    description:
+      "Choose the option that best describes the current router, switches, Wi-Fi equipment, and related networking hardware.",
+    required: true,
+    options: [
+      {
+        id: "none-new",
+        icon: "🆕",
+        title: "No Existing Network / New Project",
+        description:
+          "There is no meaningful network equipment to evaluate or reuse.",
+      },
+      {
+        id: "basic-provider",
+        icon: "📶",
+        title: "Basic Provider Equipment",
+        description:
+          "The home primarily relies on an internet-provider modem/router or gateway.",
+      },
+      {
+        id: "consumer-mesh",
+        icon: "🔗",
+        title: "Consumer Mesh System",
+        description:
+          "The home uses a consumer mesh Wi-Fi platform.",
+      },
+      {
+        id: "prosumer-managed",
+        icon: "🖧",
+        title: "Prosumer / Managed Network",
+        description:
+          "The home already uses dedicated access points, managed switching, or similar equipment.",
+      },
+      {
+        id: "unknown",
+        icon: "❓",
+        title: "Unknown / Unsure",
+        description:
+          "You are not sure what networking equipment is currently installed.",
+      },
+    ],
+    defaultGuidance: {
+      consultant:
+        "Understanding the current network helps us identify what may be reusable, what is limiting performance, and whether the final plan should replace or build around existing equipment.",
+      didYouKnow:
+        "Poor Wi-Fi performance is often caused by equipment placement, coverage design, or wired backhaul limitations rather than internet speed alone.",
+    },
+  },
+
+  {
+    id: "securityInfrastructure",
+    sessionId: "discovery",
+    type: "multi-select",
+    title: "What security infrastructure already exists?",
+    description:
+      "Select every system currently installed or already planned.",
+    required: true,
+    options: [
+      {
+        id: "wired-alarm",
+        icon: "🚨",
+        title: "Wired Alarm / Security Sensors",
+        description:
+          "Door, window, motion, or other security wiring already exists.",
+      },
+      {
+        id: "wireless-alarm",
+        icon: "📡",
+        title: "Wireless Alarm System",
+        description:
+          "The property currently uses a primarily wireless security system.",
+      },
+      {
+        id: "wired-cameras",
+        icon: "📷",
+        title: "Wired Cameras",
+        description:
+          "Network or coax-based surveillance cameras are already installed.",
+      },
+      {
+        id: "wireless-cameras",
+        icon: "📹",
+        title: "Wireless / Battery Cameras",
+        description:
+          "The property uses Wi-Fi, battery, or cloud-connected cameras.",
+      },
+      {
+        id: "video-doorbell",
+        icon: "🔔",
+        title: "Video Doorbell",
+        description:
+          "A video doorbell or entry camera is currently installed.",
+      },
+      {
+        id: "none",
+        icon: "✕",
+        title: "None",
+        description:
+          "There is no existing security infrastructure to evaluate.",
+      },
+    ],
+    defaultGuidance: {
+      consultant:
+        "Existing security wiring and cameras may be reusable, but compatibility, cable condition, power method, and system ownership should be reviewed.",
+      didYouKnow:
+        "Existing security cable can sometimes support newer sensors even when the original alarm panel is being replaced.",
+    },
+  },
+
+  {
+    id: "audioInfrastructure",
+    sessionId: "discovery",
+    type: "multi-select",
+    title: "What audio or speaker infrastructure already exists?",
+    description:
+      "Select every option that applies.",
+    required: true,
+    options: [
+      {
+        id: "in-ceiling-speakers",
+        icon: "🔊",
+        title: "In-Ceiling / In-Wall Speakers",
+        description:
+          "Permanent architectural speakers are already installed.",
+      },
+      {
+        id: "speaker-wire",
+        icon: "🧵",
+        title: "Existing Speaker Wire",
+        description:
+          "Speaker wiring is installed even if speakers or amplifiers are not currently connected.",
+      },
+      {
+        id: "distributed-audio",
+        icon: "🎵",
+        title: "Existing Distributed Audio System",
+        description:
+          "The home currently has centralized or multi-room audio equipment.",
+      },
+      {
+        id: "wireless-audio",
+        icon: "📶",
+        title: "Wireless / Smart Speakers",
+        description:
+          "The home primarily uses wireless speakers or app-based audio products.",
+      },
+      {
+        id: "none",
+        icon: "✕",
+        title: "None",
+        description:
+          "There is no existing audio infrastructure to evaluate.",
+      },
+    ],
+    defaultGuidance: {
+      consultant:
+        "Existing speaker wire and architectural speakers can reduce the cost of a future audio system if the wiring is accessible, correctly routed, and in good condition.",
+      didYouKnow:
+        "Many older in-ceiling speakers can remain useful even when the original audio electronics are obsolete.",
+    },
+  },
+
+  {
+    id: "futureExpansionPriority",
+    sessionId: "discovery",
+    type: "single-select",
+    title: "How important is future expansion to you?",
+    description:
+      "Think about technologies you may add later, even if they are not part of the initial project.",
+    required: true,
+    options: [
+      {
+        id: "low",
+        icon: "1️⃣",
+        title: "Low Priority",
+        description:
+          "Focus primarily on the technology being installed now.",
+      },
+      {
+        id: "moderate",
+        icon: "2️⃣",
+        title: "Moderate Priority",
+        description:
+          "Include reasonable spare capacity and selected future-ready pathways.",
+      },
+      {
+        id: "high",
+        icon: "3️⃣",
+        title: "High Priority",
+        description:
+          "Prioritize conduit, spare cable capacity, rack space, and infrastructure designed for future technologies.",
+      },
+      {
+        id: "unsure",
+        icon: "❓",
+        title: "Unknown / Unsure",
+        description:
+          "You would like the Blueprint to recommend an appropriate level of future readiness.",
+      },
+    ],
+    defaultGuidance: {
+      consultant:
+        "Future readiness does not mean wiring for every imaginable device. It means identifying the pathways and infrastructure that are inexpensive to install now but difficult to add later.",
+      didYouKnow:
+        "Empty conduit can sometimes be more valuable than extra cable because it creates a pathway for technologies that do not exist yet.",
     },
   },
 ];
