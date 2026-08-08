@@ -4,25 +4,21 @@ import { QuestionRenderer } from "@/components/consultation/QuestionRenderer";
 import { Card } from "@/components/ui/Card/card";
 import { PrimaryButton } from "@/components/ui/Button/PrimaryButton";
 import { projectTypeGuidance } from "@/data/consultation/discovery";
+import { blueprintSessions } from "@/data/consultation/sessions";
 import { useBlueprint } from "@/hooks/useBlueprint";
 import { theme } from "@/lib/constants/theme";
-
-const consultationSteps = [
-  "Discover Your Home",
-  "Discover Your Lifestyle",
-  "Design Your Infrastructure",
-  "Choose Your Technology",
-  "Build Your Blueprint",
-];
 
 export function BlueprintWorkspace() {
   const {
     answers,
+    sessionIndex,
+    currentSession,
     currentAnswer,
     currentQuestion,
     visibleQuestions,
     safeQuestionIndex,
-    progress,
+    sessionProgress,
+    overallProgress,
     canContinue,
     answerQuestion,
     nextQuestion,
@@ -30,13 +26,29 @@ export function BlueprintWorkspace() {
   } = useBlueprint();
 
   const activeGuidance =
-  currentQuestion.id === "projectType" &&
-  typeof currentAnswer === "string" &&
-  currentAnswer in projectTypeGuidance
-    ? projectTypeGuidance[
-        currentAnswer as keyof typeof projectTypeGuidance
-      ]
-    : currentQuestion.defaultGuidance;
+    currentQuestion.id === "projectType" &&
+    typeof currentAnswer === "string" &&
+    currentAnswer in projectTypeGuidance
+      ? projectTypeGuidance[
+          currentAnswer as keyof typeof projectTypeGuidance
+        ]
+      : currentQuestion.defaultGuidance;
+
+  const isFirstQuestion =
+    sessionIndex === 0 && safeQuestionIndex === 0;
+
+  const isLastSession =
+    sessionIndex === blueprintSessions.length - 1;
+
+  const isLastQuestion =
+    safeQuestionIndex === visibleQuestions.length - 1;
+
+  const continueLabel =
+    isLastSession && isLastQuestion
+      ? "Complete Session"
+      : isLastQuestion
+        ? "Continue to Next Session"
+        : "Continue";
 
   return (
     <main
@@ -94,7 +106,7 @@ export function BlueprintWorkspace() {
             >
               <div
                 style={{
-                  width: `${progress}%`,
+                  width: `${overallProgress}%`,
                   height: "100%",
                   background: theme.colors.primary,
                   transition: "width 200ms ease",
@@ -110,7 +122,7 @@ export function BlueprintWorkspace() {
                 marginBottom: theme.spacing.lg,
               }}
             >
-              {progress}% complete
+              {overallProgress}% overall complete
             </p>
 
             <nav
@@ -120,12 +132,13 @@ export function BlueprintWorkspace() {
                 gap: theme.spacing.sm,
               }}
             >
-              {consultationSteps.map((step, index) => {
-                const isActive = index === 0;
+              {blueprintSessions.map((session, index) => {
+                const isActive = index === sessionIndex;
+                const isComplete = index < sessionIndex;
 
                 return (
                   <div
-                    key={step}
+                    key={session.id}
                     style={{
                       padding: theme.spacing.md,
                       borderRadius: theme.radius.medium,
@@ -143,16 +156,20 @@ export function BlueprintWorkspace() {
                       style={{
                         display: "block",
                         fontSize: "0.72rem",
-                        color: isActive
-                          ? theme.colors.primary
-                          : theme.colors.textLight,
+                        color: isComplete
+                          ? theme.colors.success
+                          : isActive
+                            ? theme.colors.primary
+                            : theme.colors.textLight,
                         marginBottom: theme.spacing.xs,
                         fontWeight: 700,
                       }}
                     >
-                      {isActive
-                        ? "CURRENT SESSION"
-                        : `SESSION ${index + 1}`}
+                      {isComplete
+                        ? "COMPLETE"
+                        : isActive
+                          ? "CURRENT SESSION"
+                          : `SESSION ${index + 1}`}
                     </span>
 
                     <span
@@ -163,12 +180,61 @@ export function BlueprintWorkspace() {
                         fontWeight: isActive ? 700 : 500,
                       }}
                     >
-                      {step}
+                      {session.title}
                     </span>
                   </div>
                 );
               })}
             </nav>
+
+            <div
+              style={{
+                marginTop: theme.spacing.lg,
+                paddingTop: theme.spacing.lg,
+                borderTop: `1px solid ${theme.colors.border}`,
+              }}
+            >
+              <p
+                style={{
+                  marginTop: 0,
+                  marginBottom: theme.spacing.sm,
+                  color: theme.colors.textLight,
+                  fontSize: "0.8rem",
+                  fontWeight: 700,
+                }}
+              >
+                CURRENT SESSION PROGRESS
+              </p>
+
+              <div
+                style={{
+                  height: "6px",
+                  background: theme.colors.border,
+                  borderRadius: "999px",
+                  overflow: "hidden",
+                  marginBottom: theme.spacing.sm,
+                }}
+              >
+                <div
+                  style={{
+                    width: `${sessionProgress}%`,
+                    height: "100%",
+                    background: theme.colors.primary,
+                    transition: "width 200ms ease",
+                  }}
+                />
+              </div>
+
+              <p
+                style={{
+                  margin: 0,
+                  color: theme.colors.textLight,
+                  fontSize: "0.8rem",
+                }}
+              >
+                {sessionProgress}% of {currentSession.title}
+              </p>
+            </div>
           </Card>
         </aside>
 
@@ -192,8 +258,20 @@ export function BlueprintWorkspace() {
                 marginBottom: theme.spacing.md,
               }}
             >
-              DISCOVERY SESSION 1 OF 5 · QUESTION{" "}
+              SESSION {sessionIndex + 1} OF {blueprintSessions.length} · QUESTION{" "}
               {safeQuestionIndex + 1} OF {visibleQuestions.length}
+            </p>
+
+            <p
+              style={{
+                color: theme.colors.textLight,
+                fontSize: "0.9rem",
+                fontWeight: 700,
+                marginTop: 0,
+                marginBottom: theme.spacing.sm,
+              }}
+            >
+              {currentSession.title}
             </p>
 
             <h1
@@ -265,7 +343,7 @@ export function BlueprintWorkspace() {
                 flexWrap: "wrap",
               }}
             >
-              {safeQuestionIndex > 0 && (
+              {!isFirstQuestion && (
                 <button
                   type="button"
                   onClick={previousQuestion}
@@ -292,7 +370,7 @@ export function BlueprintWorkspace() {
                   cursor: canContinue ? "pointer" : "not-allowed",
                 }}
               >
-                Continue
+                {continueLabel}
               </PrimaryButton>
             </div>
           </Card>

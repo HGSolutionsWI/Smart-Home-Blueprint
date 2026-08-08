@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-import { discoveryQuestions } from "@/data/consultation/discovery";
+import { blueprintSessions } from "@/data/consultation/sessions";
 import type {
   BlueprintAnswer,
   BlueprintAnswers,
@@ -39,38 +39,38 @@ function questionMatchesCondition(
   return true;
 }
 
+function clearHiddenAnswers(
+  answers: BlueprintAnswers,
+  questions: readonly BlueprintQuestion[],
+): BlueprintAnswers {
+  const cleanedAnswers = { ...answers };
+
+  questions.forEach((question) => {
+    if (
+      question.condition &&
+      !questionMatchesCondition(question, cleanedAnswers)
+    ) {
+      cleanedAnswers[question.id] = null;
+    }
+  });
+
+  return cleanedAnswers;
+}
+
 export function useBlueprint() {
+  const [sessionIndex, setSessionIndex] = useState(0);
   const [questionIndex, setQuestionIndex] = useState(0);
 
-const [answers, setAnswers] = useState<BlueprintAnswers>({
-  projectType: null,
-  homeSize: null,
-  finishedLevels: null,
-  outdoorCoverage: null,
+  const [answers, setAnswers] = useState<BlueprintAnswers>({});
 
-  constructionStage: null,
-  remodelAccess: null,
-  existingHomeAccess: null,
-
-  existingStructuredWiring: null,
-  internetEntry: null,
-  preferredEquipmentLocation: null,
-  powerReliability: null,
-  backupPower: null,
-  floorPlansAvailable: null,
-  utilityAccess: null,
-  networkCondition: null,
-  securityInfrastructure: null,
-  audioInfrastructure: null,
-  futureExpansionPriority: null,
-});
+  const currentSession = blueprintSessions[sessionIndex];
 
   const visibleQuestions = useMemo(
     () =>
-      discoveryQuestions.filter((question) =>
+      currentSession.questions.filter((question) =>
         questionMatchesCondition(question, answers),
       ),
-    [answers],
+    [currentSession, answers],
   );
 
   const safeQuestionIndex = Math.min(
@@ -79,11 +79,9 @@ const [answers, setAnswers] = useState<BlueprintAnswers>({
   );
 
   const currentQuestion = visibleQuestions[safeQuestionIndex];
-  const currentAnswer = answers[currentQuestion.id] ?? null;
-
-  const progress = Math.round(
-    ((safeQuestionIndex + 1) / visibleQuestions.length) * 20,
-  );
+  const currentAnswer = currentQuestion
+    ? answers[currentQuestion.id] ?? null
+    : null;
 
   const hasAnswer = Array.isArray(currentAnswer)
     ? currentAnswer.length > 0
@@ -92,37 +90,93 @@ const [answers, setAnswers] = useState<BlueprintAnswers>({
       currentAnswer !== "";
 
   const canContinue =
-    currentQuestion.required === false || hasAnswer;
+    currentQuestion?.required === false || hasAnswer;
+
+  const sessionProgress =
+    visibleQuestions.length > 0
+      ? Math.round(
+          ((safeQuestionIndex + 1) / visibleQuestions.length) * 100,
+        )
+      : 0;
+
+  const overallProgress = Math.round(
+    ((sessionIndex +
+      (visibleQuestions.length > 0
+        ? (safeQuestionIndex + 1) / visibleQuestions.length
+        : 0)) /
+      blueprintSessions.length) *
+      100,
+  );
 
   function answerQuestion(answer: BlueprintAnswer) {
-    setAnswers((previousAnswers) => ({
-      ...previousAnswers,
-      [currentQuestion.id]: answer,
-    }));
+    if (!currentQuestion) return;
+
+    setAnswers((previousAnswers) => {
+      const updatedAnswers: BlueprintAnswers = {
+        ...previousAnswers,
+        [currentQuestion.id]: answer,
+      };
+
+      const allQuestions = blueprintSessions.flatMap(
+        (session) => session.questions,
+      );
+
+      return clearHiddenAnswers(updatedAnswers, allQuestions);
+    });
   }
 
   function nextQuestion() {
-    if (!canContinue) return;
+    if (!currentQuestion || !canContinue) return;
 
     if (safeQuestionIndex < visibleQuestions.length - 1) {
       setQuestionIndex((current) => current + 1);
+      return;
+    }
+
+    if (sessionIndex < blueprintSessions.length - 1) {
+      setSessionIndex((current) => current + 1);
+      setQuestionIndex(0);
     }
   }
 
   function previousQuestion() {
     if (safeQuestionIndex > 0) {
       setQuestionIndex((current) => current - 1);
+      return;
+    }
+
+    if (sessionIndex > 0) {
+      const previousSessionIndex = sessionIndex - 1;
+      const previousSession = blueprintSessions[previousSessionIndex];
+
+      const previousVisibleQuestions = previousSession.questions.filter(
+        (question) => questionMatchesCondition(question, answers),
+      );
+
+      setSessionIndex(previousSessionIndex);
+      setQuestionIndex(
+        Math.max(previousVisibleQuestions.length - 1, 0),
+      );
     }
   }
 
   return {
     answers,
+
+    sessionIndex,
+    currentSession,
+
     currentAnswer,
     currentQuestion,
+
     visibleQuestions,
     safeQuestionIndex,
-    progress,
+
+    sessionProgress,
+    overallProgress,
+
     canContinue,
+
     answerQuestion,
     nextQuestion,
     previousQuestion,
