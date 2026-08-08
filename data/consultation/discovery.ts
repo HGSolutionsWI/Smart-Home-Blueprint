@@ -212,6 +212,191 @@ export const discoveryQuestions: readonly BlueprintQuestion[] = [
         "A detached garage or outbuilding does not automatically require its own internet service. Depending on distance and available pathways, it may be connected back to the home's primary network.",
     },
   },
+
+  {
+    id: "constructionStage",
+    sessionId: "discovery",
+    type: "single-select",
+    title: "What stage is your new construction project in?",
+    description:
+      "Choose the stage that best describes your project today.",
+    required: true,
+    condition: {
+      questionId: "projectType",
+      equals: "new-construction",
+    },
+    options: [
+      {
+        id: "planning",
+        icon: "📐",
+        title: "Planning or Design",
+        description:
+          "Architectural plans are still being developed or finalized.",
+      },
+      {
+        id: "pre-construction",
+        icon: "📝",
+        title: "Pre-Construction",
+        description:
+          "Plans are mostly complete, but construction has not started.",
+      },
+      {
+        id: "framing",
+        icon: "🪚",
+        title: "Framing",
+        description:
+          "The structure is being framed and walls are still open.",
+      },
+      {
+        id: "rough-in",
+        icon: "⚡",
+        title: "Electrical / Mechanical Rough-In",
+        description:
+          "Electrical, plumbing, HVAC, or low-voltage work is underway.",
+      },
+      {
+        id: "drywall-soon",
+        icon: "🧱",
+        title: "Drywall Soon",
+        description:
+          "The project is approaching insulation and drywall.",
+      },
+    ],
+    defaultGuidance: {
+      consultant:
+        "Construction stage determines how much time remains to coordinate wiring, conduit, equipment locations, and future-ready infrastructure.",
+      didYouKnow:
+        "The earlier technology planning happens, the easier it is to coordinate pathways before walls are closed.",
+    },
+  },
+
+  {
+    id: "remodelAccess",
+    sessionId: "discovery",
+    type: "multi-select",
+    title: "Which areas of the remodel will be open or accessible?",
+    description:
+      "Select every condition that applies to the areas being remodeled.",
+    required: true,
+    condition: {
+      questionId: "projectType",
+      equals: "remodel-addition",
+    },
+    options: [
+      {
+        id: "walls-open",
+        icon: "🧱",
+        title: "Walls Will Be Open",
+        description:
+          "Stud bays will be accessible for new wiring and pathways.",
+      },
+      {
+        id: "ceilings-open",
+        icon: "🔨",
+        title: "Ceilings Will Be Open",
+        description:
+          "Ceiling cavities will be accessible during construction.",
+      },
+      {
+        id: "basement-access",
+        icon: "⬇️",
+        title: "Basement Access",
+        description:
+          "The remodel can be reached from an unfinished or accessible basement.",
+      },
+      {
+        id: "attic-access",
+        icon: "⬆️",
+        title: "Attic Access",
+        description:
+          "The remodel can be reached from an accessible attic.",
+      },
+      {
+        id: "limited-access",
+        icon: "⚠️",
+        title: "Mostly Finished Areas",
+        description:
+          "Only limited wall or ceiling access will be available.",
+      },
+    ],
+    defaultGuidance: {
+      consultant:
+        "Knowing which surfaces will already be open helps us separate low-cost infrastructure opportunities from areas that may require retrofit labor.",
+      didYouKnow:
+        "A remodel is often the best time to establish pathways for future technology even if some devices will be installed years later.",
+    },
+  },
+
+  {
+    id: "existingHomeAccess",
+    sessionId: "discovery",
+    type: "multi-select",
+    title: "What access is available in your existing home?",
+    description:
+      "Select every access condition that could help an installer route cable.",
+    required: true,
+    condition: {
+      questionId: "projectType",
+      equals: "existing-home",
+    },
+    options: [
+      {
+        id: "unfinished-basement",
+        icon: "⬇️",
+        title: "Unfinished Basement",
+        description:
+          "Open basement ceilings can provide excellent cable pathways.",
+      },
+      {
+        id: "finished-basement",
+        icon: "🏠",
+        title: "Finished Basement",
+        description:
+          "Cable routing may still be possible but access can be more limited.",
+      },
+      {
+        id: "crawl-space",
+        icon: "🛠️",
+        title: "Crawl Space",
+        description:
+          "A crawl space may provide access to first-floor wall cavities.",
+      },
+      {
+        id: "attic",
+        icon: "⬆️",
+        title: "Accessible Attic",
+        description:
+          "An attic can provide useful pathways for upper-floor wiring.",
+      },
+      {
+        id: "existing-conduit",
+        icon: "🔌",
+        title: "Existing Conduit",
+        description:
+          "Existing pathways may allow new cable without opening finished surfaces.",
+      },
+      {
+        id: "drywall-ok",
+        icon: "🧰",
+        title: "Drywall Patching Is Acceptable",
+        description:
+          "Selective openings can be made and repaired where necessary.",
+      },
+      {
+        id: "limited",
+        icon: "⚠️",
+        title: "Very Limited Access",
+        description:
+          "Most pathways are finished and concealed.",
+      },
+    ],
+    defaultGuidance: {
+      consultant:
+        "Existing homes can still support excellent wired infrastructure, but access conditions strongly affect labor, feasibility, and budget confidence.",
+      didYouKnow:
+        "A short installer pathway walkthrough can dramatically improve the accuracy of a retrofit budget.",
+    },
+  },
 ];
 
 export const projectTypeGuidance = {

@@ -4,7 +4,11 @@ export type QuestionType =
   | "number"
   | "text"
   | "yes-no";
-
+export type QuestionCondition = {
+  questionId: string;
+  equals?: string | number | boolean;
+  includes?: string;
+};
 export type BlueprintAnswer = string | string[] | number | boolean | null;
 
 export type QuestionOption = {
@@ -32,6 +36,8 @@ export type BlueprintQuestion = {
   defaultGuidance: ConsultantGuidance;
 
   required?: boolean;
+
+  condition?: QuestionCondition;
 };
 
 export type BlueprintAnswers = Record<string, BlueprintAnswer>;
