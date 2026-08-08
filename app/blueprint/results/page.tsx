@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { buildBlueprintRecommendations } from "@/lib/blueprint/recommendations";
 import {
   loadBlueprintProject,
   type StoredBlueprintProject,
@@ -30,7 +31,7 @@ export default function BlueprintResultsPage() {
       >
         <div
           style={{
-            maxWidth: "1100px",
+            maxWidth: "1200px",
             margin: "0 auto",
           }}
         >
@@ -51,7 +52,7 @@ export default function BlueprintResultsPage() {
       >
         <div
           style={{
-            maxWidth: "1100px",
+            maxWidth: "1200px",
             margin: "0 auto",
           }}
         >
@@ -76,6 +77,10 @@ export default function BlueprintResultsPage() {
       </main>
     );
   }
+
+  const recommendations = buildBlueprintRecommendations(
+    project.answers,
+  );
 
   const answeredEntries = Object.entries(project.answers).filter(
     ([, answer]) => {
@@ -142,9 +147,9 @@ export default function BlueprintResultsPage() {
               maxWidth: "760px",
             }}
           >
-            Your consultation is complete. The information below is the
-            structured project data that will drive your recommendations,
-            implementation plan, equipment strategy, and budget.
+            Your consultation is complete. These recommendations were
+            generated from the requirements, priorities, and preferences
+            captured during your five design sessions.
           </p>
         </header>
 
@@ -235,7 +240,7 @@ export default function BlueprintResultsPage() {
                 fontWeight: 800,
               }}
             >
-              BLUEPRINT STATUS
+              RECOMMENDATIONS
             </p>
 
             <p
@@ -246,18 +251,14 @@ export default function BlueprintResultsPage() {
                 fontWeight: 800,
               }}
             >
-              Ready to Build
+              {recommendations.length}
             </p>
           </div>
         </section>
 
         <section
           style={{
-            background: theme.colors.surface,
-            border: `1px solid ${theme.colors.border}`,
-            borderRadius: theme.radius.large,
-            padding: theme.spacing.xl,
-            marginBottom: theme.spacing.lg,
+            marginBottom: theme.spacing.xl,
           }}
         >
           <p
@@ -268,30 +269,152 @@ export default function BlueprintResultsPage() {
               marginBottom: theme.spacing.sm,
             }}
           >
-            Consultation Complete
+            HGS RECOMMENDATIONS
           </p>
 
           <h2
             style={{
               color: theme.colors.primaryDark,
               marginTop: 0,
+              marginBottom: theme.spacing.sm,
             }}
           >
-            We have enough information to build your Smart Home Blueprint.
+            Recommended Blueprint Strategy
           </h2>
 
           <p
             style={{
-              color: theme.colors.text,
+              color: theme.colors.textLight,
               lineHeight: 1.7,
-              marginBottom: 0,
+              maxWidth: "760px",
+              marginBottom: theme.spacing.lg,
             }}
           >
-            The next stage will evaluate your home, lifestyle,
-            infrastructure requirements, technology preferences, project
-            priorities, and unresolved decisions to create specific
-            recommendations.
+            These recommendations interpret combinations of answers from
+            your consultation rather than simply repeating your selections.
           </p>
+
+          {recommendations.length === 0 ? (
+            <div
+              style={{
+                background: theme.colors.surface,
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: theme.radius.large,
+                padding: theme.spacing.xl,
+              }}
+            >
+              <p
+                style={{
+                  color: theme.colors.text,
+                  margin: 0,
+                }}
+              >
+                No recommendations have been generated yet.
+              </p>
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "grid",
+                gap: theme.spacing.md,
+              }}
+            >
+              {recommendations.map((recommendation) => (
+                <article
+                  key={recommendation.id}
+                  style={{
+                    background: theme.colors.surface,
+                    border: `1px solid ${theme.colors.border}`,
+                    borderRadius: theme.radius.large,
+                    padding: theme.spacing.lg,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: theme.spacing.sm,
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      marginBottom: theme.spacing.sm,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "0.75rem",
+                        fontWeight: 800,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
+                        color: theme.colors.primary,
+                      }}
+                    >
+                      {recommendation.category.replace("-", " ")}
+                    </span>
+
+                    <span
+                      style={{
+                        fontSize: "0.75rem",
+                        fontWeight: 800,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
+                        color: theme.colors.textLight,
+                      }}
+                    >
+                      {recommendation.priority}
+                    </span>
+                  </div>
+
+                  <h3
+                    style={{
+                      color: theme.colors.primaryDark,
+                      marginTop: 0,
+                      marginBottom: theme.spacing.sm,
+                    }}
+                  >
+                    {recommendation.title}
+                  </h3>
+
+                  <p
+                    style={{
+                      color: theme.colors.text,
+                      lineHeight: 1.7,
+                      marginTop: 0,
+                      marginBottom: theme.spacing.md,
+                    }}
+                  >
+                    {recommendation.rationale}
+                  </p>
+
+                  <div
+                    style={{
+                      borderLeft: `4px solid ${theme.colors.primary}`,
+                      paddingLeft: theme.spacing.md,
+                    }}
+                  >
+                    <p
+                      style={{
+                        color: theme.colors.primaryDark,
+                        fontWeight: 800,
+                        marginTop: 0,
+                        marginBottom: theme.spacing.xs,
+                      }}
+                    >
+                      Recommended Action
+                    </p>
+
+                    <p
+                      style={{
+                        color: theme.colors.text,
+                        lineHeight: 1.7,
+                        margin: 0,
+                      }}
+                    >
+                      {recommendation.action}
+                    </p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
 
         <section
@@ -318,8 +441,8 @@ export default function BlueprintResultsPage() {
               lineHeight: 1.6,
             }}
           >
-            This confirms that the results page can independently read
-            the consultation data saved by the Blueprint engine.
+            We are keeping this visible temporarily so we can verify that
+            each recommendation matches the actual stored answers.
           </p>
 
           <pre

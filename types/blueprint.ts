@@ -75,3 +75,28 @@ export type BlueprintProject = {
   createdAt?: string;
   updatedAt?: string;
 };
+
+export type BlueprintRecommendationCategory =
+  | "network"
+  | "infrastructure"
+  | "security"
+  | "audio-video"
+  | "automation"
+  | "resilience"
+  | "implementation";
+
+export type BlueprintRecommendationPriority =
+  | "critical"
+  | "high"
+  | "recommended"
+  | "consider";
+
+export type BlueprintRecommendation = {
+  id: string;
+  category: BlueprintRecommendationCategory;
+  priority: BlueprintRecommendationPriority;
+
+  title: string;
+  rationale: string;
+  action: string;
+};
