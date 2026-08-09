@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 
-import { buildBlueprintDesignGaps } from "@/lib/blueprint/designGaps";
 import { buildBlueprintBudgetGuidance } from "@/lib/blueprint/budgetGuidance";
+import { buildBlueprintDesignGaps } from "@/lib/blueprint/designGaps";
+import { buildBlueprintExecutiveSummary } from "@/lib/blueprint/executiveSummary";
 import { buildBlueprintImplementationPlan } from "@/lib/blueprint/implementationPlan";
 import { buildBlueprintRecommendations } from "@/lib/blueprint/recommendations";
 import {
@@ -156,17 +157,24 @@ export default function BlueprintResultsPage() {
     project.answers,
   );
 
-  const implementationPlan = buildBlueprintImplementationPlan(
+  const budgetGuidance = buildBlueprintBudgetGuidance(
     project.answers,
     recommendations,
     designGaps,
   );
 
-  const budgetGuidance = buildBlueprintBudgetGuidance(
-  project.answers,
-  recommendations,
-  designGaps,
-);
+  const executiveSummary = buildBlueprintExecutiveSummary(
+    project.answers,
+    recommendations,
+    designGaps,
+    budgetGuidance,
+  );
+
+  const implementationPlan = buildBlueprintImplementationPlan(
+    project.answers,
+    recommendations,
+    designGaps,
+  );
 
   const answeredEntries = Object.entries(project.answers).filter(
     ([, answer]) => {
@@ -222,12 +230,12 @@ export default function BlueprintResultsPage() {
   ).length;
 
   const topPriorities = [...recommendations]
-  .sort(
-    (a, b) =>
-      recommendationPriorityOrder[a.priority] -
-      recommendationPriorityOrder[b.priority],
-  )
-  .slice(0, 5);
+    .sort(
+      (a, b) =>
+        recommendationPriorityOrder[a.priority] -
+        recommendationPriorityOrder[b.priority],
+    )
+    .slice(0, 5);
 
   const projectSnapshot = [
     {
@@ -316,9 +324,9 @@ export default function BlueprintResultsPage() {
             }}
           >
             Your consultation is complete. This Blueprint summarizes the
-            project, highlights your highest-priority recommendations,
-            identifies design gaps, and organizes the work into an
-            implementation sequence.
+            project, explains the recommended strategy, identifies design
+            gaps, outlines the likely investment profile, and organizes the
+            work into an implementation sequence.
           </p>
         </header>
 
@@ -532,6 +540,146 @@ export default function BlueprintResultsPage() {
 
         <section
           style={{
+            background: theme.colors.surface,
+            border: `1px solid ${theme.colors.border}`,
+            borderRadius: theme.radius.large,
+            padding: theme.spacing.xl,
+            marginBottom: theme.spacing.xl,
+          }}
+        >
+          <p
+            style={{
+              color: theme.colors.primary,
+              fontWeight: 800,
+              fontSize: "0.75rem",
+              letterSpacing: "0.1em",
+              marginTop: 0,
+              marginBottom: theme.spacing.xs,
+            }}
+          >
+            EXECUTIVE SUMMARY
+          </p>
+
+          <h2
+            style={{
+              color: theme.colors.primaryDark,
+              fontSize: "clamp(1.6rem, 3vw, 2.4rem)",
+              lineHeight: 1.2,
+              marginTop: 0,
+              marginBottom: theme.spacing.lg,
+              maxWidth: "900px",
+            }}
+          >
+            {executiveSummary.headline}
+          </h2>
+
+          <div
+            style={{
+              display: "grid",
+              gap: theme.spacing.lg,
+            }}
+          >
+            <div>
+              <h3
+                style={{
+                  color: theme.colors.primaryDark,
+                  marginTop: 0,
+                  marginBottom: theme.spacing.xs,
+                }}
+              >
+                Project Overview
+              </h3>
+
+              <p
+                style={{
+                  color: theme.colors.text,
+                  lineHeight: 1.8,
+                  margin: 0,
+                  maxWidth: "950px",
+                }}
+              >
+                {executiveSummary.overview}
+              </p>
+            </div>
+
+            <div>
+              <h3
+                style={{
+                  color: theme.colors.primaryDark,
+                  marginTop: 0,
+                  marginBottom: theme.spacing.xs,
+                }}
+              >
+                Recommended Strategy
+              </h3>
+
+              <p
+                style={{
+                  color: theme.colors.text,
+                  lineHeight: 1.8,
+                  margin: 0,
+                  maxWidth: "950px",
+                }}
+              >
+                {executiveSummary.strategy}
+              </p>
+            </div>
+
+            <div>
+              <h3
+                style={{
+                  color: theme.colors.primaryDark,
+                  marginTop: 0,
+                  marginBottom: theme.spacing.xs,
+                }}
+              >
+                Priority Focus
+              </h3>
+
+              <p
+                style={{
+                  color: theme.colors.text,
+                  lineHeight: 1.8,
+                  margin: 0,
+                  maxWidth: "950px",
+                }}
+              >
+                {executiveSummary.priorities}
+              </p>
+            </div>
+
+            <div
+              style={{
+                borderLeft: `4px solid ${theme.colors.primary}`,
+                paddingLeft: theme.spacing.md,
+              }}
+            >
+              <h3
+                style={{
+                  color: theme.colors.primaryDark,
+                  marginTop: 0,
+                  marginBottom: theme.spacing.xs,
+                }}
+              >
+                Implementation Approach
+              </h3>
+
+              <p
+                style={{
+                  color: theme.colors.text,
+                  lineHeight: 1.8,
+                  margin: 0,
+                  maxWidth: "950px",
+                }}
+              >
+                {executiveSummary.implementation}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section
+          style={{
             marginBottom: theme.spacing.xl,
           }}
         >
@@ -721,19 +869,6 @@ export default function BlueprintResultsPage() {
             >
               Design Gaps & Open Issues
             </h2>
-
-            <p
-              style={{
-                color: theme.colors.textLight,
-                lineHeight: 1.7,
-                maxWidth: "820px",
-                marginBottom: 0,
-              }}
-            >
-              These items represent mismatches between stated priorities
-              and the current design, unresolved project conditions, or
-              infrastructure decisions that should be reviewed.
-            </p>
           </div>
 
           {sortedDesignGaps.length === 0 ? (
@@ -764,8 +899,7 @@ export default function BlueprintResultsPage() {
                 }}
               >
                 The current consultation answers and infrastructure choices
-                are generally aligned. Normal installer verification and
-                project coordination are still recommended.
+                are generally aligned.
               </p>
             </div>
           ) : (
@@ -801,8 +935,7 @@ export default function BlueprintResultsPage() {
                     This Blueprint contains {criticalGapCount} critical and{" "}
                     {highGapCount} high-priority attention item
                     {criticalGapCount + highGapCount === 1 ? "" : "s"} that
-                    should be resolved before the project is treated as
-                    installation-ready.
+                    should be resolved before installation.
                   </p>
                 </div>
               )}
@@ -828,43 +961,22 @@ export default function BlueprintResultsPage() {
                       padding: theme.spacing.lg,
                     }}
                   >
-                    <div
+                    <p
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: theme.spacing.sm,
-                        flexWrap: "wrap",
-                        marginBottom: theme.spacing.sm,
+                        color:
+                          gap.severity === "critical" ||
+                          gap.severity === "high"
+                            ? theme.colors.warning
+                            : theme.colors.primary,
+                        fontSize: "0.75rem",
+                        fontWeight: 800,
+                        textTransform: "uppercase",
+                        marginTop: 0,
+                        marginBottom: theme.spacing.xs,
                       }}
                     >
-                      <span
-                        style={{
-                          fontSize: "0.75rem",
-                          fontWeight: 800,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.08em",
-                          color:
-                            gap.severity === "critical" ||
-                            gap.severity === "high"
-                              ? theme.colors.warning
-                              : theme.colors.primary,
-                        }}
-                      >
-                        {gap.severity}
-                      </span>
-
-                      <span
-                        style={{
-                          fontSize: "0.75rem",
-                          fontWeight: 800,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.08em",
-                          color: theme.colors.textLight,
-                        }}
-                      >
-                        Attention Required
-                      </span>
-                    </div>
+                      {gap.severity} attention
+                    </p>
 
                     <h3
                       style={{
@@ -895,23 +1007,12 @@ export default function BlueprintResultsPage() {
                     >
                       <p
                         style={{
-                          color: theme.colors.primaryDark,
-                          fontWeight: 800,
-                          marginTop: 0,
-                          marginBottom: theme.spacing.xs,
-                        }}
-                      >
-                        Resolve Before Installation
-                      </p>
-
-                      <p
-                        style={{
                           color: theme.colors.text,
                           lineHeight: 1.7,
                           margin: 0,
                         }}
                       >
-                        {gap.action}
+                        <strong>Resolve:</strong> {gap.action}
                       </p>
                     </div>
                   </article>
@@ -937,34 +1038,28 @@ export default function BlueprintResultsPage() {
                   marginBottom: theme.spacing.xl,
                 }}
               >
-                <div
+                <p
                   style={{
+                    color: theme.colors.primary,
+                    fontWeight: 800,
+                    fontSize: "0.75rem",
+                    letterSpacing: "0.1em",
+                    marginTop: 0,
+                    marginBottom: theme.spacing.xs,
+                  }}
+                >
+                  HGS RECOMMENDATIONS
+                </p>
+
+                <h2
+                  style={{
+                    color: theme.colors.primaryDark,
+                    marginTop: 0,
                     marginBottom: theme.spacing.md,
                   }}
                 >
-                  <p
-                    style={{
-                      color: theme.colors.primary,
-                      fontWeight: 800,
-                      fontSize: "0.75rem",
-                      letterSpacing: "0.1em",
-                      marginTop: 0,
-                      marginBottom: theme.spacing.xs,
-                    }}
-                  >
-                    HGS RECOMMENDATIONS
-                  </p>
-
-                  <h2
-                    style={{
-                      color: theme.colors.primaryDark,
-                      marginTop: 0,
-                      marginBottom: 0,
-                    }}
-                  >
-                    {categoryLabels[category]}
-                  </h2>
-                </div>
+                  {categoryLabels[category]}
+                </h2>
 
                 <div
                   style={{
@@ -983,30 +1078,21 @@ export default function BlueprintResultsPage() {
                           padding: theme.spacing.lg,
                         }}
                       >
-                        <div
+                        <p
                           style={{
-                            display: "flex",
-                            gap: theme.spacing.sm,
-                            alignItems: "center",
-                            flexWrap: "wrap",
-                            marginBottom: theme.spacing.sm,
+                            color:
+                              recommendation.priority === "critical"
+                                ? theme.colors.warning
+                                : theme.colors.primary,
+                            fontSize: "0.75rem",
+                            fontWeight: 800,
+                            textTransform: "uppercase",
+                            marginTop: 0,
+                            marginBottom: theme.spacing.xs,
                           }}
                         >
-                          <span
-                            style={{
-                              fontSize: "0.75rem",
-                              fontWeight: 800,
-                              textTransform: "uppercase",
-                              letterSpacing: "0.08em",
-                              color:
-                                recommendation.priority === "critical"
-                                  ? theme.colors.warning
-                                  : theme.colors.primary,
-                            }}
-                          >
-                            {recommendation.priority}
-                          </span>
-                        </div>
+                          {recommendation.priority}
+                        </p>
 
                         <h3
                           style={{
@@ -1037,22 +1123,12 @@ export default function BlueprintResultsPage() {
                         >
                           <p
                             style={{
-                              color: theme.colors.primaryDark,
-                              fontWeight: 800,
-                              marginTop: 0,
-                              marginBottom: theme.spacing.xs,
-                            }}
-                          >
-                            Recommended Action
-                          </p>
-
-                          <p
-                            style={{
                               color: theme.colors.text,
                               lineHeight: 1.7,
                               margin: 0,
                             }}
                           >
+                            <strong>Recommended Action:</strong>{" "}
                             {recommendation.action}
                           </p>
                         </div>
@@ -1065,188 +1141,187 @@ export default function BlueprintResultsPage() {
           })}
 
         <section
-  style={{
-    marginBottom: theme.spacing.xl,
-  }}
->
-  <p
-    style={{
-      color: theme.colors.primary,
-      fontWeight: 800,
-      fontSize: "0.75rem",
-      letterSpacing: "0.1em",
-      marginTop: 0,
-      marginBottom: theme.spacing.xs,
-    }}
-  >
-    BUDGET GUIDANCE
-  </p>
-
-  <h2
-    style={{
-      color: theme.colors.primaryDark,
-      marginTop: 0,
-      marginBottom: theme.spacing.sm,
-    }}
-  >
-    Planning for Your Technology Investment
-  </h2>
-
-  <p
-    style={{
-      color: theme.colors.textLight,
-      lineHeight: 1.7,
-      maxWidth: "840px",
-      marginBottom: theme.spacing.lg,
-    }}
-  >
-    Your Blueprint can help establish the relative scale and complexity of
-    the project before specific equipment, quantities, labor, and site
-    conditions are known.
-  </p>
-
-  <div
-    style={{
-      background: theme.colors.surface,
-      border: `1px solid ${theme.colors.border}`,
-      borderRadius: theme.radius.large,
-      padding: theme.spacing.xl,
-      marginBottom: theme.spacing.md,
-    }}
-  >
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "flex-start",
-        gap: theme.spacing.md,
-        flexWrap: "wrap",
-        marginBottom: theme.spacing.md,
-      }}
-    >
-      <div>
-        <p
           style={{
-            color: theme.colors.textLight,
-            fontSize: "0.75rem",
-            fontWeight: 800,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            marginTop: 0,
-            marginBottom: theme.spacing.xs,
+            marginBottom: theme.spacing.xl,
           }}
         >
-          Project Investment Profile
-        </p>
+          <p
+            style={{
+              color: theme.colors.primary,
+              fontWeight: 800,
+              fontSize: "0.75rem",
+              letterSpacing: "0.1em",
+              marginTop: 0,
+              marginBottom: theme.spacing.xs,
+            }}
+          >
+            BUDGET GUIDANCE
+          </p>
 
-        <h3
-          style={{
-            color: theme.colors.primaryDark,
-            fontSize: "1.5rem",
-            marginTop: 0,
-            marginBottom: 0,
-          }}
-        >
-          {budgetGuidance.title}
-        </h3>
-      </div>
+          <h2
+            style={{
+              color: theme.colors.primaryDark,
+              marginTop: 0,
+              marginBottom: theme.spacing.sm,
+            }}
+          >
+            Planning for Your Technology Investment
+          </h2>
 
-      <div
-        style={{
-          background: "#EAF3FF",
-          borderRadius: "999px",
-          padding: "8px 14px",
-          whiteSpace: "nowrap",
-        }}
-      >
-        <span
-          style={{
-            color: theme.colors.primary,
-            fontSize: "0.75rem",
-            fontWeight: 800,
-            textTransform: "uppercase",
-            letterSpacing: "0.06em",
-          }}
-        >
-          {budgetGuidance.level}
-        </span>
-      </div>
-    </div>
-
-    <p
-      style={{
-        color: theme.colors.text,
-        lineHeight: 1.7,
-        marginTop: 0,
-        marginBottom: theme.spacing.md,
-        maxWidth: "900px",
-      }}
-    >
-      {budgetGuidance.summary}
-    </p>
-
-    <div
-      style={{
-        borderTop: `1px solid ${theme.colors.border}`,
-        paddingTop: theme.spacing.md,
-      }}
-    >
-      <p
-        style={{
-          color: theme.colors.textLight,
-          fontSize: "0.75rem",
-          fontWeight: 800,
-          textTransform: "uppercase",
-          letterSpacing: "0.06em",
-          marginTop: 0,
-          marginBottom: theme.spacing.xs,
-        }}
-      >
-        Planning Confidence
-      </p>
-
-      <p
-        style={{
-          color: theme.colors.primaryDark,
-          fontWeight: 800,
-          fontSize: "1.1rem",
-          margin: 0,
-        }}
-      >
-        {budgetGuidance.confidence
-          .charAt(0)
-          .toUpperCase() +
-          budgetGuidance.confidence.slice(1)}
-      </p>
-    </div>
-  </div>
-
-  {budgetGuidance.drivers.length > 0 && (
-    <>
-      <h3
-        style={{
-          color: theme.colors.primaryDark,
-          marginTop: theme.spacing.lg,
-          marginBottom: theme.spacing.md,
-        }}
-      >
-        What Is Driving the Investment
-      </h3>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns:
-            "repeat(auto-fit, minmax(260px, 1fr))",
-          gap: theme.spacing.md,
-          marginBottom: theme.spacing.md,
-        }}
-      >
-        {budgetGuidance.drivers.map((driver) => (
-          <article
-            key={driver.id}
+          <div
             style={{
               background: theme.colors.surface,
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: theme.radius.large,
+              padding: theme.spacing.xl,
+              marginBottom: theme.spacing.md,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                gap: theme.spacing.md,
+                flexWrap: "wrap",
+                marginBottom: theme.spacing.md,
+              }}
+            >
+              <div>
+                <p
+                  style={{
+                    color: theme.colors.textLight,
+                    fontSize: "0.75rem",
+                    fontWeight: 800,
+                    textTransform: "uppercase",
+                    marginTop: 0,
+                    marginBottom: theme.spacing.xs,
+                  }}
+                >
+                  Project Investment Profile
+                </p>
+
+                <h3
+                  style={{
+                    color: theme.colors.primaryDark,
+                    fontSize: "1.5rem",
+                    marginTop: 0,
+                    marginBottom: 0,
+                  }}
+                >
+                  {budgetGuidance.title}
+                </h3>
+              </div>
+
+              <div
+                style={{
+                  background: "#EAF3FF",
+                  borderRadius: "999px",
+                  padding: "8px 14px",
+                }}
+              >
+                <span
+                  style={{
+                    color: theme.colors.primary,
+                    fontSize: "0.75rem",
+                    fontWeight: 800,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {budgetGuidance.level}
+                </span>
+              </div>
+            </div>
+
+            <p
+              style={{
+                color: theme.colors.text,
+                lineHeight: 1.7,
+                marginTop: 0,
+                marginBottom: theme.spacing.md,
+              }}
+            >
+              {budgetGuidance.summary}
+            </p>
+
+            <p
+              style={{
+                color: theme.colors.primaryDark,
+                fontWeight: 800,
+                margin: 0,
+              }}
+            >
+              Planning confidence:{" "}
+              {budgetGuidance.confidence
+                .charAt(0)
+                .toUpperCase() +
+                budgetGuidance.confidence.slice(1)}
+            </p>
+          </div>
+
+          {budgetGuidance.drivers.length > 0 && (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit, minmax(260px, 1fr))",
+                gap: theme.spacing.md,
+                marginBottom: theme.spacing.md,
+              }}
+            >
+              {budgetGuidance.drivers.map((driver) => (
+                <article
+                  key={driver.id}
+                  style={{
+                    background: theme.colors.surface,
+                    border: `1px solid ${theme.colors.border}`,
+                    borderRadius: theme.radius.large,
+                    padding: theme.spacing.lg,
+                  }}
+                >
+                  <p
+                    style={{
+                      color:
+                        driver.impact === "major"
+                          ? theme.colors.warning
+                          : theme.colors.primary,
+                      fontSize: "0.72rem",
+                      fontWeight: 800,
+                      textTransform: "uppercase",
+                      marginTop: 0,
+                      marginBottom: theme.spacing.xs,
+                    }}
+                  >
+                    {driver.impact} impact
+                  </p>
+
+                  <h4
+                    style={{
+                      color: theme.colors.primaryDark,
+                      marginTop: 0,
+                      marginBottom: theme.spacing.sm,
+                    }}
+                  >
+                    {driver.title}
+                  </h4>
+
+                  <p
+                    style={{
+                      color: theme.colors.text,
+                      lineHeight: 1.7,
+                      margin: 0,
+                    }}
+                  >
+                    {driver.explanation}
+                  </p>
+                </article>
+              ))}
+            </div>
+          )}
+
+          <div
+            style={{
+              background: "#F8FAFC",
               border: `1px solid ${theme.colors.border}`,
               borderRadius: theme.radius.large,
               padding: theme.spacing.lg,
@@ -1254,78 +1329,16 @@ export default function BlueprintResultsPage() {
           >
             <p
               style={{
-                color:
-                  driver.impact === "major"
-                    ? theme.colors.warning
-                    : theme.colors.primary,
-                fontSize: "0.72rem",
-                fontWeight: 800,
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                marginTop: 0,
-                marginBottom: theme.spacing.xs,
-              }}
-            >
-              {driver.impact} impact
-            </p>
-
-            <h4
-              style={{
-                color: theme.colors.primaryDark,
-                fontSize: "1rem",
-                marginTop: 0,
-                marginBottom: theme.spacing.sm,
-              }}
-            >
-              {driver.title}
-            </h4>
-
-            <p
-              style={{
                 color: theme.colors.text,
                 lineHeight: 1.7,
                 margin: 0,
               }}
             >
-              {driver.explanation}
+              {budgetGuidance.planningNote}
             </p>
-          </article>
-        ))}
-      </div>
-    </>
-  )}
+          </div>
+        </section>
 
-  <div
-    style={{
-      background: "#F8FAFC",
-      border: `1px solid ${theme.colors.border}`,
-      borderRadius: theme.radius.large,
-      padding: theme.spacing.lg,
-    }}
-  >
-    <p
-      style={{
-        color: theme.colors.primaryDark,
-        fontWeight: 800,
-        marginTop: 0,
-        marginBottom: theme.spacing.xs,
-      }}
-    >
-      About Budget Guidance
-    </p>
-
-    <p
-      style={{
-        color: theme.colors.text,
-        lineHeight: 1.7,
-        margin: 0,
-      }}
-    >
-      {budgetGuidance.planningNote}
-    </p>
-  </div>
-</section>
-        
         <section
           style={{
             marginBottom: theme.spacing.xl,
@@ -1353,20 +1366,6 @@ export default function BlueprintResultsPage() {
           >
             Your Recommended Project Sequence
           </h2>
-
-          <p
-            style={{
-              color: theme.colors.textLight,
-              lineHeight: 1.7,
-              maxWidth: "840px",
-              marginBottom: theme.spacing.lg,
-            }}
-          >
-            Use this sequence to resolve design issues first, preserve
-            difficult-to-retrofit infrastructure, establish the core
-            technology foundation, and then layer homeowner-facing systems
-            on top.
-          </p>
 
           <div
             style={{

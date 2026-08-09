@@ -158,3 +158,11 @@ export type BlueprintBudgetGuidance = {
   drivers: BlueprintBudgetDriver[];
   planningNote: string;
 };
+
+export type BlueprintExecutiveSummary = {
+  headline: string;
+  overview: string;
+  strategy: string;
+  priorities: string;
+  implementation: string;
+};
