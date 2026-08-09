@@ -114,3 +114,25 @@ export type BlueprintDesignGap = {
   issue: string;
   action: string;
 };
+
+export type BlueprintImplementationPhaseId =
+  | "resolve-first"
+  | "infrastructure"
+  | "core-systems"
+  | "technology"
+  | "future-expansion";
+
+export type BlueprintImplementationItem = {
+  id: string;
+  phase: BlueprintImplementationPhaseId;
+  title: string;
+  reason: string;
+  action: string;
+};
+
+export type BlueprintImplementationPhase = {
+  id: BlueprintImplementationPhaseId;
+  title: string;
+  description: string;
+  items: BlueprintImplementationItem[];
+};

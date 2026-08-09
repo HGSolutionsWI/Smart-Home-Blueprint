@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { buildBlueprintDesignGaps } from "@/lib/blueprint/designGaps";
+import { buildBlueprintImplementationPlan } from "@/lib/blueprint/implementationPlan";
 import { buildBlueprintRecommendations } from "@/lib/blueprint/recommendations";
 import {
   loadBlueprintProject,
@@ -46,6 +47,30 @@ const categoryLabels: Record<
   resilience: "Resilience",
   implementation: "Implementation",
 };
+
+function formatValue(value: unknown): string {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) =>
+        String(item)
+          .replaceAll("-", " ")
+          .replace(/\b\w/g, (letter) => letter.toUpperCase()),
+      )
+      .join(", ");
+  }
+
+  if (typeof value === "boolean") {
+    return value ? "Yes" : "No";
+  }
+
+  if (value === null || value === undefined || value === "") {
+    return "Not provided";
+  }
+
+  return String(value)
+    .replaceAll("-", " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
 
 export default function BlueprintResultsPage() {
   const [project, setProject] =
@@ -130,6 +155,12 @@ export default function BlueprintResultsPage() {
     project.answers,
   );
 
+  const implementationPlan = buildBlueprintImplementationPlan(
+    project.answers,
+    recommendations,
+    designGaps,
+  );
+
   const answeredEntries = Object.entries(project.answers).filter(
     ([, answer]) => {
       if (
@@ -158,10 +189,7 @@ export default function BlueprintResultsPage() {
 
       return groups;
     },
-    {} as Record<
-      string,
-      typeof recommendations
-    >,
+    {} as Record<string, typeof recommendations>,
   );
 
   Object.values(groupedRecommendations).forEach((group) => {
@@ -185,6 +213,49 @@ export default function BlueprintResultsPage() {
   const highGapCount = designGaps.filter(
     (gap) => gap.severity === "high",
   ).length;
+
+  const topPriorities = [...recommendations]
+  .sort(
+    (a, b) =>
+      recommendationPriorityOrder[a.priority] -
+      recommendationPriorityOrder[b.priority],
+  )
+  .slice(0, 5);
+
+  const projectSnapshot = [
+    {
+      label: "Project Type",
+      value: formatValue(project.answers.projectType),
+    },
+    {
+      label: "Home Size",
+      value: formatValue(project.answers.homeSize),
+    },
+    {
+      label: "Finished Levels",
+      value: formatValue(project.answers.finishedLevels),
+    },
+    {
+      label: "Internet Dependency",
+      value: formatValue(project.answers.internetDependency),
+    },
+    {
+      label: "Security Priority",
+      value: formatValue(project.answers.securityPriority),
+    },
+    {
+      label: "Automation Interest",
+      value: formatValue(project.answers.automationInterest),
+    },
+    {
+      label: "Future Expansion",
+      value: formatValue(project.answers.futureExpansionPriority),
+    },
+    {
+      label: "Implementation Timing",
+      value: formatValue(project.answers.implementationTiming),
+    },
+  ];
 
   return (
     <main
@@ -237,9 +308,10 @@ export default function BlueprintResultsPage() {
               maxWidth: "820px",
             }}
           >
-            Your consultation is complete. This Blueprint evaluates your
-            project requirements, identifies design gaps, and provides
-            recommendations based on the five design sessions.
+            Your consultation is complete. This Blueprint summarizes the
+            project, highlights your highest-priority recommendations,
+            identifies design gaps, and organizes the work into an
+            implementation sequence.
           </p>
         </header>
 
@@ -379,10 +451,6 @@ export default function BlueprintResultsPage() {
 
         <section
           style={{
-            background: theme.colors.surface,
-            border: `1px solid ${theme.colors.border}`,
-            borderRadius: theme.radius.large,
-            padding: theme.spacing.xl,
             marginBottom: theme.spacing.xl,
           }}
         >
@@ -390,11 +458,87 @@ export default function BlueprintResultsPage() {
             style={{
               color: theme.colors.primary,
               fontWeight: 800,
+              fontSize: "0.75rem",
+              letterSpacing: "0.1em",
               marginTop: 0,
-              marginBottom: theme.spacing.sm,
+              marginBottom: theme.spacing.xs,
             }}
           >
-            BLUEPRINT STRATEGY
+            PROJECT SNAPSHOT
+          </p>
+
+          <h2
+            style={{
+              color: theme.colors.primaryDark,
+              marginTop: 0,
+              marginBottom: theme.spacing.md,
+            }}
+          >
+            Your Project at a Glance
+          </h2>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns:
+                "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: theme.spacing.md,
+            }}
+          >
+            {projectSnapshot.map((item) => (
+              <div
+                key={item.label}
+                style={{
+                  background: theme.colors.surface,
+                  border: `1px solid ${theme.colors.border}`,
+                  borderRadius: theme.radius.large,
+                  padding: theme.spacing.lg,
+                }}
+              >
+                <p
+                  style={{
+                    marginTop: 0,
+                    marginBottom: theme.spacing.xs,
+                    color: theme.colors.textLight,
+                    fontSize: "0.75rem",
+                    fontWeight: 800,
+                    letterSpacing: "0.06em",
+                  }}
+                >
+                  {item.label.toUpperCase()}
+                </p>
+
+                <p
+                  style={{
+                    margin: 0,
+                    color: theme.colors.primaryDark,
+                    fontWeight: 800,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {item.value}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section
+          style={{
+            marginBottom: theme.spacing.xl,
+          }}
+        >
+          <p
+            style={{
+              color: theme.colors.primary,
+              fontWeight: 800,
+              fontSize: "0.75rem",
+              letterSpacing: "0.1em",
+              marginTop: 0,
+              marginBottom: theme.spacing.xs,
+            }}
+          >
+            TOP PRIORITIES
           </p>
 
           <h2
@@ -404,24 +548,138 @@ export default function BlueprintResultsPage() {
               marginBottom: theme.spacing.sm,
             }}
           >
-            Recommended Smart Home Strategy
+            What Matters Most in This Blueprint
           </h2>
 
           <p
             style={{
-              color: theme.colors.text,
+              color: theme.colors.textLight,
               lineHeight: 1.7,
-              marginBottom: 0,
-              maxWidth: "840px",
+              maxWidth: "820px",
+              marginBottom: theme.spacing.lg,
             }}
           >
-            The recommendations below interpret combinations of your
-            project conditions, household priorities, infrastructure
-            choices, technology preferences, and implementation goals.
-            Attention items identify conflicts, missing infrastructure,
-            unresolved decisions, or conditions that should be addressed
-            before installation.
+            These are the highest-priority conclusions generated from your
+            consultation. They should receive early attention during design,
+            budgeting, and implementation.
           </p>
+
+          {topPriorities.length === 0 ? (
+            <div
+              style={{
+                background: theme.colors.surface,
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: theme.radius.large,
+                padding: theme.spacing.xl,
+              }}
+            >
+              <p
+                style={{
+                  color: theme.colors.text,
+                  margin: 0,
+                }}
+              >
+                No high-priority recommendations have been generated yet.
+              </p>
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "grid",
+                gap: theme.spacing.md,
+              }}
+            >
+              {topPriorities.map((recommendation, index) => (
+                <article
+                  key={recommendation.id}
+                  style={{
+                    background: theme.colors.surface,
+                    border: `1px solid ${theme.colors.border}`,
+                    borderRadius: theme.radius.large,
+                    padding: theme.spacing.lg,
+                    display: "grid",
+                    gridTemplateColumns: "52px minmax(0, 1fr)",
+                    gap: theme.spacing.md,
+                    alignItems: "start",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "52px",
+                      height: "52px",
+                      borderRadius: "999px",
+                      display: "grid",
+                      placeItems: "center",
+                      background: "#EAF3FF",
+                      color: theme.colors.primary,
+                      fontWeight: 900,
+                      fontSize: "1.1rem",
+                    }}
+                  >
+                    {index + 1}
+                  </div>
+
+                  <div>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: theme.spacing.sm,
+                        flexWrap: "wrap",
+                        marginBottom: theme.spacing.xs,
+                      }}
+                    >
+                      <span
+                        style={{
+                          color:
+                            recommendation.priority === "critical"
+                              ? theme.colors.warning
+                              : theme.colors.primary,
+                          textTransform: "uppercase",
+                          fontSize: "0.72rem",
+                          fontWeight: 800,
+                          letterSpacing: "0.08em",
+                        }}
+                      >
+                        {recommendation.priority}
+                      </span>
+
+                      <span
+                        style={{
+                          color: theme.colors.textLight,
+                          textTransform: "uppercase",
+                          fontSize: "0.72rem",
+                          fontWeight: 800,
+                          letterSpacing: "0.08em",
+                        }}
+                      >
+                        {recommendation.category.replace("-", " / ")}
+                      </span>
+                    </div>
+
+                    <h3
+                      style={{
+                        color: theme.colors.primaryDark,
+                        marginTop: 0,
+                        marginBottom: theme.spacing.xs,
+                      }}
+                    >
+                      {recommendation.title}
+                    </h3>
+
+                    <p
+                      style={{
+                        color: theme.colors.text,
+                        lineHeight: 1.7,
+                        margin: 0,
+                      }}
+                    >
+                      {recommendation.rationale}
+                    </p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
 
         <section
@@ -656,26 +914,7 @@ export default function BlueprintResultsPage() {
           )}
         </section>
 
-        {recommendations.length === 0 ? (
-          <section
-            style={{
-              background: theme.colors.surface,
-              border: `1px solid ${theme.colors.border}`,
-              borderRadius: theme.radius.large,
-              padding: theme.spacing.xl,
-              marginBottom: theme.spacing.xl,
-            }}
-          >
-            <p
-              style={{
-                color: theme.colors.text,
-                margin: 0,
-              }}
-            >
-              No recommendations have been generated yet.
-            </p>
-          </section>
-        ) : (
+        {recommendations.length > 0 &&
           categoryOrder.map((category) => {
             const categoryRecommendations =
               groupedRecommendations[category];
@@ -753,8 +992,7 @@ export default function BlueprintResultsPage() {
                               textTransform: "uppercase",
                               letterSpacing: "0.08em",
                               color:
-                                recommendation.priority ===
-                                "critical"
+                                recommendation.priority === "critical"
                                   ? theme.colors.warning
                                   : theme.colors.primary,
                             }}
@@ -817,49 +1055,149 @@ export default function BlueprintResultsPage() {
                 </div>
               </section>
             );
-          })
-        )}
+          })}
 
         <section
           style={{
-            background: "#111827",
-            borderRadius: theme.radius.large,
-            padding: theme.spacing.xl,
-            color: "#FFFFFF",
+            marginBottom: theme.spacing.xl,
           }}
         >
           <p
             style={{
-              color: "#93C5FD",
+              color: theme.colors.primary,
               fontWeight: 800,
+              fontSize: "0.75rem",
+              letterSpacing: "0.1em",
               marginTop: 0,
+              marginBottom: theme.spacing.xs,
             }}
           >
-            Developer — Persisted Blueprint Data
+            IMPLEMENTATION PLAN
           </p>
+
+          <h2
+            style={{
+              color: theme.colors.primaryDark,
+              marginTop: 0,
+              marginBottom: theme.spacing.sm,
+            }}
+          >
+            Your Recommended Project Sequence
+          </h2>
 
           <p
             style={{
-              color: "#D1D5DB",
-              lineHeight: 1.6,
+              color: theme.colors.textLight,
+              lineHeight: 1.7,
+              maxWidth: "840px",
+              marginBottom: theme.spacing.lg,
             }}
           >
-            This remains visible temporarily while we validate that each
-            recommendation and design-gap finding matches the actual
-            consultation answers.
+            Use this sequence to resolve design issues first, preserve
+            difficult-to-retrofit infrastructure, establish the core
+            technology foundation, and then layer homeowner-facing systems
+            on top.
           </p>
 
-          <pre
+          <div
             style={{
-              overflowX: "auto",
-              whiteSpace: "pre-wrap",
-              fontSize: "0.8rem",
-              lineHeight: 1.6,
-              marginBottom: 0,
+              display: "grid",
+              gap: theme.spacing.md,
             }}
           >
-            {JSON.stringify(project.answers, null, 2)}
-          </pre>
+            {implementationPlan.map((phase) => (
+              <article
+                key={phase.id}
+                style={{
+                  background: theme.colors.surface,
+                  border: `1px solid ${theme.colors.border}`,
+                  borderRadius: theme.radius.large,
+                  padding: theme.spacing.lg,
+                }}
+              >
+                <h3
+                  style={{
+                    color: theme.colors.primaryDark,
+                    marginTop: 0,
+                    marginBottom: theme.spacing.xs,
+                  }}
+                >
+                  {phase.title}
+                </h3>
+
+                <p
+                  style={{
+                    color: theme.colors.textLight,
+                    lineHeight: 1.7,
+                    marginTop: 0,
+                    marginBottom: phase.items.length
+                      ? theme.spacing.md
+                      : 0,
+                  }}
+                >
+                  {phase.description}
+                </p>
+
+                {phase.items.length > 0 && (
+                  <div
+                    style={{
+                      display: "grid",
+                      gap: theme.spacing.md,
+                    }}
+                  >
+                    {phase.items.map((item) => (
+                      <div
+                        key={item.id}
+                        style={{
+                          borderTop: `1px solid ${theme.colors.border}`,
+                          paddingTop: theme.spacing.md,
+                        }}
+                      >
+                        <p
+                          style={{
+                            color: theme.colors.primaryDark,
+                            fontWeight: 800,
+                            marginTop: 0,
+                            marginBottom: theme.spacing.xs,
+                          }}
+                        >
+                          {item.title}
+                        </p>
+
+                        <p
+                          style={{
+                            color: theme.colors.text,
+                            lineHeight: 1.7,
+                            marginTop: 0,
+                            marginBottom: theme.spacing.sm,
+                          }}
+                        >
+                          {item.reason}
+                        </p>
+
+                        <div
+                          style={{
+                            borderLeft: `4px solid ${theme.colors.primary}`,
+                            paddingLeft: theme.spacing.md,
+                          }}
+                        >
+                          <p
+                            style={{
+                              color: theme.colors.text,
+                              lineHeight: 1.7,
+                              margin: 0,
+                            }}
+                          >
+                            <strong>Action:</strong> {item.action}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </article>
+            ))}
+          </div>
         </section>
       </div>
     </main>
