@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { buildBlueprintDesignGaps } from "@/lib/blueprint/designGaps";
+import { buildBlueprintBudgetGuidance } from "@/lib/blueprint/budgetGuidance";
 import { buildBlueprintImplementationPlan } from "@/lib/blueprint/implementationPlan";
 import { buildBlueprintRecommendations } from "@/lib/blueprint/recommendations";
 import {
@@ -160,6 +161,12 @@ export default function BlueprintResultsPage() {
     recommendations,
     designGaps,
   );
+
+  const budgetGuidance = buildBlueprintBudgetGuidance(
+  project.answers,
+  recommendations,
+  designGaps,
+);
 
   const answeredEntries = Object.entries(project.answers).filter(
     ([, answer]) => {
@@ -1057,6 +1064,268 @@ export default function BlueprintResultsPage() {
             );
           })}
 
+        <section
+  style={{
+    marginBottom: theme.spacing.xl,
+  }}
+>
+  <p
+    style={{
+      color: theme.colors.primary,
+      fontWeight: 800,
+      fontSize: "0.75rem",
+      letterSpacing: "0.1em",
+      marginTop: 0,
+      marginBottom: theme.spacing.xs,
+    }}
+  >
+    BUDGET GUIDANCE
+  </p>
+
+  <h2
+    style={{
+      color: theme.colors.primaryDark,
+      marginTop: 0,
+      marginBottom: theme.spacing.sm,
+    }}
+  >
+    Planning for Your Technology Investment
+  </h2>
+
+  <p
+    style={{
+      color: theme.colors.textLight,
+      lineHeight: 1.7,
+      maxWidth: "840px",
+      marginBottom: theme.spacing.lg,
+    }}
+  >
+    Your Blueprint can help establish the relative scale and complexity of
+    the project before specific equipment, quantities, labor, and site
+    conditions are known.
+  </p>
+
+  <div
+    style={{
+      background: theme.colors.surface,
+      border: `1px solid ${theme.colors.border}`,
+      borderRadius: theme.radius.large,
+      padding: theme.spacing.xl,
+      marginBottom: theme.spacing.md,
+    }}
+  >
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        gap: theme.spacing.md,
+        flexWrap: "wrap",
+        marginBottom: theme.spacing.md,
+      }}
+    >
+      <div>
+        <p
+          style={{
+            color: theme.colors.textLight,
+            fontSize: "0.75rem",
+            fontWeight: 800,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            marginTop: 0,
+            marginBottom: theme.spacing.xs,
+          }}
+        >
+          Project Investment Profile
+        </p>
+
+        <h3
+          style={{
+            color: theme.colors.primaryDark,
+            fontSize: "1.5rem",
+            marginTop: 0,
+            marginBottom: 0,
+          }}
+        >
+          {budgetGuidance.title}
+        </h3>
+      </div>
+
+      <div
+        style={{
+          background: "#EAF3FF",
+          borderRadius: "999px",
+          padding: "8px 14px",
+          whiteSpace: "nowrap",
+        }}
+      >
+        <span
+          style={{
+            color: theme.colors.primary,
+            fontSize: "0.75rem",
+            fontWeight: 800,
+            textTransform: "uppercase",
+            letterSpacing: "0.06em",
+          }}
+        >
+          {budgetGuidance.level}
+        </span>
+      </div>
+    </div>
+
+    <p
+      style={{
+        color: theme.colors.text,
+        lineHeight: 1.7,
+        marginTop: 0,
+        marginBottom: theme.spacing.md,
+        maxWidth: "900px",
+      }}
+    >
+      {budgetGuidance.summary}
+    </p>
+
+    <div
+      style={{
+        borderTop: `1px solid ${theme.colors.border}`,
+        paddingTop: theme.spacing.md,
+      }}
+    >
+      <p
+        style={{
+          color: theme.colors.textLight,
+          fontSize: "0.75rem",
+          fontWeight: 800,
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+          marginTop: 0,
+          marginBottom: theme.spacing.xs,
+        }}
+      >
+        Planning Confidence
+      </p>
+
+      <p
+        style={{
+          color: theme.colors.primaryDark,
+          fontWeight: 800,
+          fontSize: "1.1rem",
+          margin: 0,
+        }}
+      >
+        {budgetGuidance.confidence
+          .charAt(0)
+          .toUpperCase() +
+          budgetGuidance.confidence.slice(1)}
+      </p>
+    </div>
+  </div>
+
+  {budgetGuidance.drivers.length > 0 && (
+    <>
+      <h3
+        style={{
+          color: theme.colors.primaryDark,
+          marginTop: theme.spacing.lg,
+          marginBottom: theme.spacing.md,
+        }}
+      >
+        What Is Driving the Investment
+      </h3>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns:
+            "repeat(auto-fit, minmax(260px, 1fr))",
+          gap: theme.spacing.md,
+          marginBottom: theme.spacing.md,
+        }}
+      >
+        {budgetGuidance.drivers.map((driver) => (
+          <article
+            key={driver.id}
+            style={{
+              background: theme.colors.surface,
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: theme.radius.large,
+              padding: theme.spacing.lg,
+            }}
+          >
+            <p
+              style={{
+                color:
+                  driver.impact === "major"
+                    ? theme.colors.warning
+                    : theme.colors.primary,
+                fontSize: "0.72rem",
+                fontWeight: 800,
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                marginTop: 0,
+                marginBottom: theme.spacing.xs,
+              }}
+            >
+              {driver.impact} impact
+            </p>
+
+            <h4
+              style={{
+                color: theme.colors.primaryDark,
+                fontSize: "1rem",
+                marginTop: 0,
+                marginBottom: theme.spacing.sm,
+              }}
+            >
+              {driver.title}
+            </h4>
+
+            <p
+              style={{
+                color: theme.colors.text,
+                lineHeight: 1.7,
+                margin: 0,
+              }}
+            >
+              {driver.explanation}
+            </p>
+          </article>
+        ))}
+      </div>
+    </>
+  )}
+
+  <div
+    style={{
+      background: "#F8FAFC",
+      border: `1px solid ${theme.colors.border}`,
+      borderRadius: theme.radius.large,
+      padding: theme.spacing.lg,
+    }}
+  >
+    <p
+      style={{
+        color: theme.colors.primaryDark,
+        fontWeight: 800,
+        marginTop: 0,
+        marginBottom: theme.spacing.xs,
+      }}
+    >
+      About Budget Guidance
+    </p>
+
+    <p
+      style={{
+        color: theme.colors.text,
+        lineHeight: 1.7,
+        margin: 0,
+      }}
+    >
+      {budgetGuidance.planningNote}
+    </p>
+  </div>
+</section>
+        
         <section
           style={{
             marginBottom: theme.spacing.xl,

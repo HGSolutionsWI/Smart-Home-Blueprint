@@ -136,3 +136,25 @@ export type BlueprintImplementationPhase = {
   description: string;
   items: BlueprintImplementationItem[];
 };
+
+export type BlueprintBudgetLevel =
+  | "foundation"
+  | "enhanced"
+  | "advanced"
+  | "premium";
+
+export type BlueprintBudgetDriver = {
+  id: string;
+  title: string;
+  impact: "moderate" | "significant" | "major";
+  explanation: string;
+};
+
+export type BlueprintBudgetGuidance = {
+  level: BlueprintBudgetLevel;
+  title: string;
+  summary: string;
+  confidence: "low" | "medium" | "high";
+  drivers: BlueprintBudgetDriver[];
+  planningNote: string;
+};
