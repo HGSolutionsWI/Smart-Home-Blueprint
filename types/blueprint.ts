@@ -63,18 +63,36 @@ export type BlueprintSession = {
   questions: readonly BlueprintQuestion[];
 };
 
+/*
+ * BLUEPRINT PROJECT
+ */
+
+export type BlueprintProjectStatus =
+  | "in-progress"
+  | "complete";
+
 export type BlueprintProject = {
-  id?: string;
-  name?: string;
+  id: string;
+
+  ownerId?: string;
+
+  name: string;
+  homeName?: string;
 
   answers: BlueprintAnswers;
 
   currentSessionId: string;
   currentQuestionId: string;
 
-  createdAt?: string;
-  updatedAt?: string;
+  status: BlueprintProjectStatus;
+
+  createdAt: string;
+  updatedAt: string;
 };
+
+/*
+ * RECOMMENDATIONS
+ */
 
 export type BlueprintRecommendationCategory =
   | "network"
@@ -101,6 +119,10 @@ export type BlueprintRecommendation = {
   action: string;
 };
 
+/*
+ * DESIGN GAPS
+ */
+
 export type BlueprintDesignGapSeverity =
   | "critical"
   | "high"
@@ -110,10 +132,15 @@ export type BlueprintDesignGapSeverity =
 export type BlueprintDesignGap = {
   id: string;
   severity: BlueprintDesignGapSeverity;
+
   title: string;
   issue: string;
   action: string;
 };
+
+/*
+ * IMPLEMENTATION PLAN
+ */
 
 export type BlueprintImplementationPhaseId =
   | "resolve-first"
@@ -125,6 +152,7 @@ export type BlueprintImplementationPhaseId =
 export type BlueprintImplementationItem = {
   id: string;
   phase: BlueprintImplementationPhaseId;
+
   title: string;
   reason: string;
   action: string;
@@ -132,10 +160,16 @@ export type BlueprintImplementationItem = {
 
 export type BlueprintImplementationPhase = {
   id: BlueprintImplementationPhaseId;
+
   title: string;
   description: string;
+
   items: BlueprintImplementationItem[];
 };
+
+/*
+ * BUDGET GUIDANCE
+ */
 
 export type BlueprintBudgetLevel =
   | "foundation"
@@ -146,21 +180,32 @@ export type BlueprintBudgetLevel =
 export type BlueprintBudgetDriver = {
   id: string;
   title: string;
+
   impact: "moderate" | "significant" | "major";
+
   explanation: string;
 };
 
 export type BlueprintBudgetGuidance = {
   level: BlueprintBudgetLevel;
+
   title: string;
   summary: string;
+
   confidence: "low" | "medium" | "high";
+
   drivers: BlueprintBudgetDriver[];
+
   planningNote: string;
 };
 
+/*
+ * EXECUTIVE SUMMARY
+ */
+
 export type BlueprintExecutiveSummary = {
   headline: string;
+
   overview: string;
   strategy: string;
   priorities: string;

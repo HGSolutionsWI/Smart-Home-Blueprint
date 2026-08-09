@@ -72,25 +72,83 @@ function clearHiddenAnswers(
   return cleanedAnswers;
 }
 
+function findSessionIndex(sessionId: string): number {
+  const index = blueprintSessions.findIndex(
+    (session) => session.id === sessionId,
+  );
+
+  return index >= 0 ? index : 0;
+}
+
+function findVisibleQuestionIndex(
+  questions: readonly BlueprintQuestion[],
+  questionId: string,
+): number {
+  const index = questions.findIndex(
+    (question) => question.id === questionId,
+  );
+
+  return index >= 0 ? index : 0;
+}
+
 export function useBlueprint() {
   const [sessionIndex, setSessionIndex] = useState(0);
   const [questionIndex, setQuestionIndex] = useState(0);
+
   const [answers, setAnswers] = useState<BlueprintAnswers>({});
+
   const [hasLoadedStorage, setHasLoadedStorage] = useState(false);
 
   useEffect(() => {
     const storedProject = loadBlueprintProject();
 
-    if (storedProject) {
-      setAnswers(storedProject.answers);
-      setSessionIndex(
-        Math.min(
-          storedProject.sessionIndex,
-          blueprintSessions.length - 1,
+    if (!storedProject) {
+      setHasLoadedStorage(true);
+      return;
+    }
+
+    const restoredSessionIndex = findSessionIndex(
+      storedProject.currentSessionId,
+    );
+
+    const restoredSession =
+      blueprintSessions[restoredSessionIndex];
+
+    const restoredVisibleQuestions =
+      restoredSession.questions.filter((question) =>
+        questionMatchesCondition(
+          question,
+          storedProject.answers,
         ),
       );
-      setQuestionIndex(Math.max(storedProject.questionIndex, 0));
+
+    let restoredQuestionIndex =
+      findVisibleQuestionIndex(
+        restoredVisibleQuestions,
+        storedProject.currentQuestionId,
+      );
+
+    /*
+     * Compatibility fallback for projects saved before
+     * ID-based navigation became the source of truth.
+     */
+    if (
+      restoredQuestionIndex === 0 &&
+      storedProject.currentQuestionId !==
+        restoredVisibleQuestions[0]?.id &&
+      typeof storedProject.questionIndex === "number"
+    ) {
+      restoredQuestionIndex = Math.min(
+        Math.max(storedProject.questionIndex, 0),
+        Math.max(restoredVisibleQuestions.length - 1, 0),
+      );
     }
+
+    setAnswers(storedProject.answers);
+
+    setSessionIndex(restoredSessionIndex);
+
+    setQuestionIndex(restoredQuestionIndex);
 
     setHasLoadedStorage(true);
   }, []);
@@ -108,7 +166,8 @@ export function useBlueprint() {
     Math.max(visibleQuestions.length - 1, 0),
   );
 
-  const currentQuestion = visibleQuestions[safeQuestionIndex];
+  const currentQuestion =
+    visibleQuestions[safeQuestionIndex];
 
   const currentAnswer = currentQuestion
     ? answers[currentQuestion.id] ?? null
@@ -126,26 +185,42 @@ export function useBlueprint() {
   const sessionProgress =
     visibleQuestions.length > 0
       ? Math.round(
-          ((safeQuestionIndex + 1) / visibleQuestions.length) * 100,
+          ((safeQuestionIndex + 1) /
+            visibleQuestions.length) *
+            100,
         )
       : 0;
 
   const overallProgress = Math.round(
     ((sessionIndex +
       (visibleQuestions.length > 0
-        ? (safeQuestionIndex + 1) / visibleQuestions.length
+        ? (safeQuestionIndex + 1) /
+          visibleQuestions.length
         : 0)) /
       blueprintSessions.length) *
       100,
   );
 
   useEffect(() => {
-    if (!hasLoadedStorage) {
+    if (
+      !hasLoadedStorage ||
+      !currentSession ||
+      !currentQuestion
+    ) {
       return;
     }
 
     saveBlueprintProject({
       answers,
+
+      currentSessionId: currentSession.id,
+      currentQuestionId: currentQuestion.id,
+
+      /*
+       * Temporary compatibility fields.
+       * These can be removed later once every consumer
+       * uses session/question IDs.
+       */
       sessionIndex,
       questionIndex: safeQuestionIndex,
     });
@@ -153,6 +228,8 @@ export function useBlueprint() {
     answers,
     sessionIndex,
     safeQuestionIndex,
+    currentSession,
+    currentQuestion,
     hasLoadedStorage,
   ]);
 
@@ -167,11 +244,15 @@ export function useBlueprint() {
         [currentQuestion.id]: answer,
       };
 
-      const allQuestions = blueprintSessions.flatMap(
-        (session) => session.questions,
-      );
+      const allQuestions =
+        blueprintSessions.flatMap(
+          (session) => session.questions,
+        );
 
-      return clearHiddenAnswers(updatedAnswers, allQuestions);
+      return clearHiddenAnswers(
+        updatedAnswers,
+        allQuestions,
+      );
     });
   }
 
@@ -180,36 +261,65 @@ export function useBlueprint() {
       return;
     }
 
-    if (safeQuestionIndex < visibleQuestions.length - 1) {
-      setQuestionIndex((current) => current + 1);
+    if (
+      safeQuestionIndex <
+      visibleQuestions.length - 1
+    ) {
+      setQuestionIndex(
+        (current) => current + 1,
+      );
+
       return;
     }
 
-    if (sessionIndex < blueprintSessions.length - 1) {
-      setSessionIndex((current) => current + 1);
+    if (
+      sessionIndex <
+      blueprintSessions.length - 1
+    ) {
+      setSessionIndex(
+        (current) => current + 1,
+      );
+
       setQuestionIndex(0);
     }
   }
 
   function previousQuestion() {
     if (safeQuestionIndex > 0) {
-      setQuestionIndex((current) => current - 1);
+      setQuestionIndex(
+        (current) => current - 1,
+      );
+
       return;
     }
 
     if (sessionIndex > 0) {
-      const previousSessionIndex = sessionIndex - 1;
-      const previousSession = blueprintSessions[previousSessionIndex];
+      const previousSessionIndex =
+        sessionIndex - 1;
+
+      const previousSession =
+        blueprintSessions[
+          previousSessionIndex
+        ];
 
       const previousVisibleQuestions =
-        previousSession.questions.filter((question) =>
-          questionMatchesCondition(question, answers),
+        previousSession.questions.filter(
+          (question) =>
+            questionMatchesCondition(
+              question,
+              answers,
+            ),
         );
 
-      setSessionIndex(previousSessionIndex);
+      setSessionIndex(
+        previousSessionIndex,
+      );
 
       setQuestionIndex(
-        Math.max(previousVisibleQuestions.length - 1, 0),
+        Math.max(
+          previousVisibleQuestions.length - 1,
+          0,
+        ),
       );
     }
   }
@@ -218,10 +328,11 @@ export function useBlueprint() {
     answers,
 
     sessionIndex,
-    currentSession,
+    questionIndex: safeQuestionIndex,
 
-    currentAnswer,
+    currentSession,
     currentQuestion,
+    currentAnswer,
 
     visibleQuestions,
     safeQuestionIndex,
