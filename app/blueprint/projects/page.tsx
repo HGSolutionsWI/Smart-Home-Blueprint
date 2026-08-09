@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { SignOutButton } from "@/components/auth/SignOutButton";
 
 import {
   createNewBlueprintProject,
@@ -250,22 +251,33 @@ export default function BlueprintProjectsPage() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={createProject}
-            style={{
-              border: "none",
-              borderRadius: theme.radius.large,
-              background: theme.colors.primary,
-              color: "#FFFFFF",
-              padding: "14px 20px",
-              fontWeight: 800,
-              fontSize: "0.95rem",
-              cursor: "pointer",
-            }}
-          >
-            + Create New Blueprint
-          </button>
+          <div
+  style={{
+    display: "flex",
+    gap: theme.spacing.sm,
+    alignItems: "center",
+    flexWrap: "wrap",
+  }}
+>
+  <SignOutButton />
+
+  <button
+    type="button"
+    onClick={createProject}
+    style={{
+      border: "none",
+      borderRadius: theme.radius.large,
+      background: theme.colors.primary,
+      color: "#FFFFFF",
+      padding: "14px 20px",
+      fontWeight: 800,
+      fontSize: "0.95rem",
+      cursor: "pointer",
+    }}
+  >
+    + Create New Blueprint
+  </button>
+</div>
         </header>
 
         {projects.length === 0 ? (
