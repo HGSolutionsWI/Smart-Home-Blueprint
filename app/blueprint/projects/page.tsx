@@ -5,8 +5,11 @@ import { useRouter } from "next/navigation";
 
 import {
   createNewBlueprintProject,
+  deleteBlueprintProject,
   getBlueprintProjects,
+  renameBlueprintProject,
   setActiveBlueprintProject,
+  updateBlueprintHomeName,
   type StoredBlueprintProject,
 } from "@/lib/blueprint/storage";
 import { theme } from "@/lib/constants/theme";
@@ -32,14 +35,8 @@ function getProjectProgress(
     return 100;
   }
 
-  /*
-   * Temporary progress indicator.
-   *
-   * sessionIndex is still available as a compatibility field.
-   * We can replace this later with progress derived directly
-   * from the consultation sessions.
-   */
-  const estimatedProgress = (project.sessionIndex + 1) * 10;
+  const estimatedProgress =
+    (project.sessionIndex + 1) * 10;
 
   return Math.min(
     Math.max(estimatedProgress, 5),
@@ -56,7 +53,19 @@ export default function BlueprintProjectsPage() {
 
   const [hasLoaded, setHasLoaded] = useState(false);
 
-  useEffect(() => {
+  const [editingProjectId, setEditingProjectId] =
+    useState<string | null>(null);
+
+  const [editingName, setEditingName] =
+    useState("");
+
+  const [editingHomeName, setEditingHomeName] =
+    useState("");
+
+  const [deleteProjectId, setDeleteProjectId] =
+    useState<string | null>(null);
+
+  function refreshProjects() {
     const savedProjects = getBlueprintProjects()
       .slice()
       .sort(
@@ -66,6 +75,10 @@ export default function BlueprintProjectsPage() {
       );
 
     setProjects(savedProjects);
+  }
+
+  useEffect(() => {
+    refreshProjects();
     setHasLoaded(true);
   }, []);
 
@@ -89,10 +102,61 @@ export default function BlueprintProjectsPage() {
 
   function createProject() {
     createNewBlueprintProject({
-      name: `Smart Home Blueprint ${projects.length + 1}`,
+      name: `Smart Home Blueprint ${
+        projects.length + 1
+      }`,
     });
 
     router.push("/blueprint");
+  }
+
+  function beginEditing(
+    project: StoredBlueprintProject,
+  ) {
+    setEditingProjectId(project.id);
+    setEditingName(project.name);
+    setEditingHomeName(project.homeName ?? "");
+  }
+
+  function cancelEditing() {
+    setEditingProjectId(null);
+    setEditingName("");
+    setEditingHomeName("");
+  }
+
+  function saveProjectDetails(
+    projectId: string,
+  ) {
+    const trimmedName = editingName.trim();
+
+    if (trimmedName) {
+      renameBlueprintProject(
+        projectId,
+        trimmedName,
+      );
+    }
+
+    updateBlueprintHomeName(
+      projectId,
+      editingHomeName,
+    );
+
+    cancelEditing();
+    refreshProjects();
+  }
+
+  function confirmDelete(
+    projectId: string,
+  ) {
+    deleteBlueprintProject(projectId);
+
+    setDeleteProjectId(null);
+
+    if (editingProjectId === projectId) {
+      cancelEditing();
+    }
+
+    refreshProjects();
   }
 
   if (!hasLoaded) {
@@ -163,7 +227,8 @@ export default function BlueprintProjectsPage() {
             <h1
               style={{
                 color: theme.colors.primaryDark,
-                fontSize: "clamp(2.2rem, 5vw, 4rem)",
+                fontSize:
+                  "clamp(2.2rem, 5vw, 4rem)",
                 lineHeight: 1,
                 marginTop: 0,
                 marginBottom: theme.spacing.sm,
@@ -180,9 +245,8 @@ export default function BlueprintProjectsPage() {
                 margin: 0,
               }}
             >
-              Your Blueprints are living plans for the homes
-              and projects you are designing, upgrading, and
-              maintaining.
+              Manage the homes and projects you are
+              designing, upgrading, and maintaining.
             </p>
           </div>
 
@@ -232,9 +296,10 @@ export default function BlueprintProjectsPage() {
                 marginBottom: theme.spacing.lg,
               }}
             >
-              Start with your current home, a remodel, or a
-              new construction project. Your consultation will
-              be saved so you can return as the project evolves.
+              Start with your current home, a remodel,
+              or a new construction project. Your
+              consultation will be saved as the project
+              evolves.
             </p>
 
             <button
@@ -258,13 +323,19 @@ export default function BlueprintProjectsPage() {
             style={{
               display: "grid",
               gridTemplateColumns:
-                "repeat(auto-fit, minmax(300px, 1fr))",
+                "repeat(auto-fit, minmax(320px, 1fr))",
               gap: theme.spacing.md,
             }}
           >
             {projects.map((project) => {
               const progress =
                 getProjectProgress(project);
+
+              const isEditing =
+                editingProjectId === project.id;
+
+              const isConfirmingDelete =
+                deleteProjectId === project.id;
 
               return (
                 <article
@@ -276,7 +347,7 @@ export default function BlueprintProjectsPage() {
                     padding: theme.spacing.lg,
                     display: "flex",
                     flexDirection: "column",
-                    minHeight: "280px",
+                    minHeight: "320px",
                   }}
                 >
                   <div
@@ -308,17 +379,20 @@ export default function BlueprintProjectsPage() {
                           : "In Progress"}
                       </p>
 
-                      <h2
-                        style={{
-                          color: theme.colors.primaryDark,
-                          fontSize: "1.35rem",
-                          lineHeight: 1.3,
-                          margin: 0,
-                        }}
-                      >
-                        {project.homeName ||
-                          project.name}
-                      </h2>
+                      {!isEditing && (
+                        <h2
+                          style={{
+                            color:
+                              theme.colors.primaryDark,
+                            fontSize: "1.35rem",
+                            lineHeight: 1.3,
+                            margin: 0,
+                          }}
+                        >
+                          {project.homeName ||
+                            project.name}
+                        </h2>
+                      )}
                     </div>
 
                     <div
@@ -347,104 +421,408 @@ export default function BlueprintProjectsPage() {
                     </div>
                   </div>
 
-                  {project.homeName &&
-                    project.homeName !== project.name && (
-                      <p
-                        style={{
-                          color: theme.colors.textLight,
-                          marginTop: 0,
-                          marginBottom: theme.spacing.md,
-                        }}
-                      >
-                        {project.name}
-                      </p>
-                    )}
-
-                  <div
-                    style={{
-                      marginBottom: theme.spacing.lg,
-                    }}
-                  >
+                  {isEditing ? (
                     <div
                       style={{
-                        width: "100%",
-                        height: "7px",
-                        background: "#E5E7EB",
-                        borderRadius: "999px",
-                        overflow: "hidden",
+                        display: "grid",
+                        gap: theme.spacing.md,
+                        marginBottom: theme.spacing.lg,
                       }}
                     >
+                      <label
+                        style={{
+                          display: "grid",
+                          gap: theme.spacing.xs,
+                        }}
+                      >
+                        <span
+                          style={{
+                            color:
+                              theme.colors.textLight,
+                            fontSize: "0.75rem",
+                            fontWeight: 800,
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          Blueprint Name
+                        </span>
+
+                        <input
+                          value={editingName}
+                          onChange={(event) =>
+                            setEditingName(
+                              event.target.value,
+                            )
+                          }
+                          style={{
+                            width: "100%",
+                            boxSizing: "border-box",
+                            border: `1px solid ${theme.colors.border}`,
+                            borderRadius:
+                              theme.radius.medium,
+                            padding: "11px 12px",
+                            font: "inherit",
+                            color:
+                              theme.colors.primaryDark,
+                            background:
+                              theme.colors.surface,
+                          }}
+                        />
+                      </label>
+
+                      <label
+                        style={{
+                          display: "grid",
+                          gap: theme.spacing.xs,
+                        }}
+                      >
+                        <span
+                          style={{
+                            color:
+                              theme.colors.textLight,
+                            fontSize: "0.75rem",
+                            fontWeight: 800,
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          Home Name
+                        </span>
+
+                        <input
+                          value={editingHomeName}
+                          onChange={(event) =>
+                            setEditingHomeName(
+                              event.target.value,
+                            )
+                          }
+                          placeholder="Example: Lake House"
+                          style={{
+                            width: "100%",
+                            boxSizing: "border-box",
+                            border: `1px solid ${theme.colors.border}`,
+                            borderRadius:
+                              theme.radius.medium,
+                            padding: "11px 12px",
+                            font: "inherit",
+                            color:
+                              theme.colors.primaryDark,
+                            background:
+                              theme.colors.surface,
+                          }}
+                        />
+                      </label>
+
                       <div
                         style={{
-                          width: `${progress}%`,
-                          height: "100%",
-                          background: theme.colors.primary,
-                          borderRadius: "999px",
+                          display: "flex",
+                          gap: theme.spacing.sm,
+                          flexWrap: "wrap",
                         }}
-                      />
+                      >
+                        <button
+                          type="button"
+                          onClick={() =>
+                            saveProjectDetails(
+                              project.id,
+                            )
+                          }
+                          style={{
+                            border: "none",
+                            borderRadius:
+                              theme.radius.medium,
+                            background:
+                              theme.colors.primary,
+                            color: "#FFFFFF",
+                            padding: "10px 14px",
+                            fontWeight: 800,
+                            cursor: "pointer",
+                          }}
+                        >
+                          Save Changes
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={cancelEditing}
+                          style={{
+                            border: `1px solid ${theme.colors.border}`,
+                            borderRadius:
+                              theme.radius.medium,
+                            background:
+                              theme.colors.surface,
+                            color:
+                              theme.colors.primaryDark,
+                            padding: "10px 14px",
+                            fontWeight: 800,
+                            cursor: "pointer",
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <>
+                      {project.homeName &&
+                        project.homeName !==
+                          project.name && (
+                          <p
+                            style={{
+                              color:
+                                theme.colors.textLight,
+                              marginTop: 0,
+                              marginBottom:
+                                theme.spacing.md,
+                            }}
+                          >
+                            {project.name}
+                          </p>
+                        )}
 
-                  <div
-                    style={{
-                      display: "grid",
-                      gap: theme.spacing.xs,
-                      marginBottom: theme.spacing.lg,
-                    }}
-                  >
-                    <p
+                      <div
+                        style={{
+                          marginBottom:
+                            theme.spacing.lg,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: "100%",
+                            height: "7px",
+                            background: "#E5E7EB",
+                            borderRadius: "999px",
+                            overflow: "hidden",
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: `${progress}%`,
+                              height: "100%",
+                              background:
+                                theme.colors.primary,
+                              borderRadius: "999px",
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          display: "grid",
+                          gap: theme.spacing.xs,
+                          marginBottom:
+                            theme.spacing.lg,
+                        }}
+                      >
+                        <p
+                          style={{
+                            color:
+                              theme.colors.textLight,
+                            fontSize: "0.8rem",
+                            margin: 0,
+                          }}
+                        >
+                          Last updated{" "}
+                          {formatUpdatedDate(
+                            project.updatedAt,
+                          )}
+                        </p>
+
+                        <p
+                          style={{
+                            color:
+                              theme.colors.textLight,
+                            fontSize: "0.8rem",
+                            margin: 0,
+                          }}
+                        >
+                          Project ID:{" "}
+                          {project.id.slice(0, 8)}
+                        </p>
+                      </div>
+                    </>
+                  )}
+
+                  {!isEditing && (
+                    <div
                       style={{
-                        color: theme.colors.textLight,
-                        fontSize: "0.8rem",
-                        margin: 0,
+                        marginTop: "auto",
+                        display: "grid",
+                        gap: theme.spacing.sm,
                       }}
                     >
-                      Last updated{" "}
-                      {formatUpdatedDate(
-                        project.updatedAt,
+                      <button
+                        type="button"
+                        onClick={() =>
+                          openProject(project)
+                        }
+                        style={{
+                          width: "100%",
+                          border: "none",
+                          borderRadius:
+                            theme.radius.large,
+                          background:
+                            theme.colors.primary,
+                          color: "#FFFFFF",
+                          padding: "13px 16px",
+                          fontWeight: 800,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {project.status === "complete"
+                          ? "View Blueprint"
+                          : "Resume Blueprint"}
+                      </button>
+
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns:
+                            "1fr 1fr",
+                          gap: theme.spacing.sm,
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() =>
+                            beginEditing(project)
+                          }
+                          style={{
+                            border: `1px solid ${theme.colors.border}`,
+                            borderRadius:
+                              theme.radius.medium,
+                            background:
+                              theme.colors.surface,
+                            color:
+                              theme.colors.primaryDark,
+                            padding: "10px 12px",
+                            fontWeight: 800,
+                            cursor: "pointer",
+                          }}
+                        >
+                          Edit Details
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setDeleteProjectId(
+                              project.id,
+                            )
+                          }
+                          style={{
+                            border: `1px solid ${theme.colors.border}`,
+                            borderRadius:
+                              theme.radius.medium,
+                            background:
+                              theme.colors.surface,
+                            color:
+                              theme.colors.warning,
+                            padding: "10px 12px",
+                            fontWeight: 800,
+                            cursor: "pointer",
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+
+                      {isConfirmingDelete && (
+                        <div
+                          style={{
+                            background: "#FFF7ED",
+                            border: `1px solid ${theme.colors.warning}`,
+                            borderRadius:
+                              theme.radius.medium,
+                            padding: theme.spacing.md,
+                          }}
+                        >
+                          <p
+                            style={{
+                              color:
+                                theme.colors.primaryDark,
+                              fontWeight: 800,
+                              marginTop: 0,
+                              marginBottom:
+                                theme.spacing.xs,
+                            }}
+                          >
+                            Delete this Blueprint?
+                          </p>
+
+                          <p
+                            style={{
+                              color:
+                                theme.colors.text,
+                              lineHeight: 1.6,
+                              marginTop: 0,
+                              marginBottom:
+                                theme.spacing.md,
+                            }}
+                          >
+                            This removes the locally
+                            saved project and its
+                            consultation answers.
+                          </p>
+
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: theme.spacing.sm,
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <button
+                              type="button"
+                              onClick={() =>
+                                confirmDelete(
+                                  project.id,
+                                )
+                              }
+                              style={{
+                                border: "none",
+                                borderRadius:
+                                  theme.radius.medium,
+                                background:
+                                  theme.colors.warning,
+                                color: "#FFFFFF",
+                                padding:
+                                  "9px 12px",
+                                fontWeight: 800,
+                                cursor: "pointer",
+                              }}
+                            >
+                              Yes, Delete
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setDeleteProjectId(
+                                  null,
+                                )
+                              }
+                              style={{
+                                border: `1px solid ${theme.colors.border}`,
+                                borderRadius:
+                                  theme.radius.medium,
+                                background:
+                                  theme.colors.surface,
+                                color:
+                                  theme.colors.primaryDark,
+                                padding:
+                                  "9px 12px",
+                                fontWeight: 800,
+                                cursor: "pointer",
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
                       )}
-                    </p>
-
-                    <p
-                      style={{
-                        color: theme.colors.textLight,
-                        fontSize: "0.8rem",
-                        margin: 0,
-                      }}
-                    >
-                      Project ID:{" "}
-                      {project.id.slice(0, 8)}
-                    </p>
-                  </div>
-
-                  <div
-                    style={{
-                      marginTop: "auto",
-                    }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() =>
-                        openProject(project)
-                      }
-                      style={{
-                        width: "100%",
-                        border: "none",
-                        borderRadius:
-                          theme.radius.large,
-                        background:
-                          theme.colors.primary,
-                        color: "#FFFFFF",
-                        padding: "13px 16px",
-                        fontWeight: 800,
-                        cursor: "pointer",
-                      }}
-                    >
-                      {project.status === "complete"
-                        ? "View Blueprint"
-                        : "Resume Blueprint"}
-                    </button>
-                  </div>
+                    </div>
+                  )}
                 </article>
               );
             })}
