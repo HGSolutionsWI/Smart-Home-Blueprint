@@ -11,6 +11,7 @@ import {
   importBlueprintProject,
   renameBlueprintProject,
   setActiveBlueprintProject,
+  setBlueprintProjectOwner,
   updateBlueprintHomeName,
   type StoredBlueprintProject,
 } from "@/lib/blueprint/storage";
@@ -149,6 +150,22 @@ export default function BlueprintProjectsPage() {
           localProjects,
         );
 
+      /*
+       * Claim legacy local projects that do not yet
+       * have an owner assigned.
+       */
+      for (const localProject of localProjects) {
+        if (!localProject.ownerId) {
+          setBlueprintProjectOwner(
+            localProject.id,
+            syncResult.ownerId,
+          );
+        }
+      }
+
+      /*
+       * Process projects returned from Supabase.
+       */
       for (
         const remoteProject
         of syncResult.remoteProjects
@@ -156,10 +173,6 @@ export default function BlueprintProjectsPage() {
         const localProject =
           localById.get(remoteProject.id);
 
-        /*
-         * Project exists only in Supabase.
-         * Import it into this browser.
-         */
         if (!localProject) {
           importBlueprintProject(
             mapRemoteToLocal(remoteProject),
@@ -169,10 +182,6 @@ export default function BlueprintProjectsPage() {
           continue;
         }
 
-        /*
-         * Both copies exist.
-         * If Supabase is newer, update localStorage.
-         */
         const localUpdated =
           getTimestamp(localProject.updatedAt);
 
@@ -189,18 +198,39 @@ export default function BlueprintProjectsPage() {
           );
         }
       }
-    } catch (error) {
+
       /*
-       * Keep My Blueprints usable from localStorage
-       * even if account sync temporarily fails.
+       * Show only projects belonging to the
+       * currently authenticated account.
        */
+      const accountProjects =
+        getBlueprintProjects()
+          .filter(
+            (project) =>
+              project.ownerId ===
+              syncResult.ownerId,
+          )
+          .slice()
+          .sort(
+            (a, b) =>
+              new Date(
+                b.updatedAt,
+              ).getTime() -
+              new Date(
+                a.updatedAt,
+              ).getTime(),
+          );
+
+      if (!isCancelled) {
+        setProjects(accountProjects);
+      }
+    } catch (error) {
       console.error(
         "Blueprint account sync failed:",
         error,
       );
     } finally {
       if (!isCancelled) {
-        refreshProjects();
         setHasLoaded(true);
       }
     }

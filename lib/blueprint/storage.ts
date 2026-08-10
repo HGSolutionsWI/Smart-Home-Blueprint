@@ -552,6 +552,40 @@ export function updateBlueprintProject(
   }
 }
 
+export function setBlueprintProjectOwner(
+  projectId: string,
+  ownerId: string,
+): StoredBlueprintProject | null {
+  const library = loadBlueprintLibrary();
+
+  const existingProject = library.projects.find(
+    (project) => project.id === projectId,
+  );
+
+  if (!existingProject) {
+    return null;
+  }
+
+  const updatedProject: StoredBlueprintProject = {
+    ...existingProject,
+    ownerId,
+  };
+
+  const updatedProjects = library.projects.map(
+    (project) =>
+      project.id === projectId
+        ? updatedProject
+        : project,
+  );
+
+  writeLibrary({
+    ...library,
+    projects: updatedProjects,
+  });
+
+  return updatedProject;
+}
+
 export function renameBlueprintProject(
   projectId: string,
   name: string,
