@@ -897,6 +897,27 @@ useEffect(() => {
   </button>
 )}
 
+<button
+  type="button"
+  onClick={() =>
+    router.push(
+      `/blueprint/plans?project=${project.id}`,
+    )
+  }
+  style={{
+    width: "100%",
+    border: `1px solid ${theme.colors.border}`,
+    borderRadius: theme.radius.large,
+    background: theme.colors.surface,
+    color: theme.colors.primaryDark,
+    padding: "13px 16px",
+    fontWeight: 800,
+    cursor: "pointer",
+  }}
+>
+  Project Plans
+</button>
+
                       <div
                         style={{
                           display: "grid",
