@@ -43,3 +43,70 @@ body {
     flex-shrink: 0;
   }
 }
+
+.blueprint-workspace-grid {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+}
+
+@media (max-width: 768px) {
+  .blueprint-workspace-grid {
+    display: flex;
+    flex-direction: column;
+    padding: 8px !important;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .blueprint-workspace-grid > section {
+    order: 1;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .blueprint-workspace-grid > aside {
+    order: 2;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .blueprint-workspace-grid > aside > * {
+    position: static !important;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+.option-card {
+  grid-template-columns: 56px minmax(0, 1fr);
+}
+
+@media (max-width: 768px) {
+  .option-card {
+    grid-template-columns: 1fr;
+    padding: 8px !important;
+  }
+
+  .option-card > span:first-child {
+    font-size: 1.6rem !important;
+  }
+}
+
+.yes-no-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 768px) {
+  .yes-no-options {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .blueprint-question-card {
+    padding: 16px !important;
+  }
+}

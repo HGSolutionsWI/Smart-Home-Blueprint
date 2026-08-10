@@ -19,28 +19,28 @@ export function OptionCard({
 }: OptionCardProps) {
   return (
     <button
-      type="button"
-      aria-pressed={selected}
-      onClick={onSelect}
-      style={{
-        width: "100%",
-        display: "grid",
-        gridTemplateColumns: "56px minmax(0, 1fr)",
-        gap: theme.spacing.md,
-        alignItems: "start",
-        padding: theme.spacing.lg,
-        textAlign: "left",
-        background: selected ? "#EAF3FF" : theme.colors.surface,
-        border: `2px solid ${
-          selected ? theme.colors.primary : theme.colors.border
-        }`,
-        borderRadius: theme.radius.large,
-        cursor: "pointer",
-        boxShadow: selected ? theme.shadow.card : "none",
-        transition:
-          "border-color 160ms ease, background 160ms ease, transform 160ms ease",
-      }}
-    >
+  className="option-card"
+  type="button"
+  aria-pressed={selected}
+  onClick={onSelect}
+  style={{
+    width: "100%",
+    display: "grid",
+    gap: theme.spacing.md,
+    alignItems: "start",
+    padding: theme.spacing.lg,
+    textAlign: "left",
+    background: selected ? "#EAF3FF" : theme.colors.surface,
+    border: `2px solid ${
+      selected ? theme.colors.primary : theme.colors.border
+    }`,
+    borderRadius: theme.radius.large,
+    cursor: "pointer",
+    boxShadow: selected ? theme.shadow.card : "none",
+    transition:
+      "border-color 160ms ease, background 160ms ease, transform 160ms ease",
+  }}
+>
       <span
         aria-hidden="true"
         style={{

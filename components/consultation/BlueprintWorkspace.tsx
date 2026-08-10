@@ -99,15 +99,16 @@ async function handleContinue() {
       }}
     >
       <div
-        style={{
-          maxWidth: "1440px",
-          margin: "0 auto",
-          padding: theme.spacing.lg,
-          display: "grid",
-          gridTemplateColumns: "280px minmax(0, 1fr)",
-          gap: theme.spacing.lg,
-        }}
-      >
+  className="blueprint-workspace-grid"
+  style={{
+    maxWidth: "1440px",
+    width: "100%",
+    margin: "0 auto",
+    padding: theme.spacing.lg,
+    gap: theme.spacing.lg,
+    boxSizing: "border-box",
+  }}
+>
         <aside>
           <Card
             style={{
@@ -285,10 +286,11 @@ async function handleContinue() {
           }}
         >
           <Card
-            style={{
-              padding: theme.spacing.xxl,
-            }}
-          >
+  className="blueprint-question-card"
+  style={{
+    padding: theme.spacing.xxl,
+  }}
+>
             <p
               style={{
                 color: theme.colors.primary,

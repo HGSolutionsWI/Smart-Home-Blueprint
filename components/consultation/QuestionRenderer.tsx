@@ -21,12 +21,13 @@ export function QuestionRenderer({
   if (question.type === "single-select" && question.options) {
     return (
       <div
-        style={{
-          display: "grid",
-          gap: theme.spacing.md,
-          marginBottom: theme.spacing.xl,
-        }}
-      >
+  className="yes-no-options"
+  style={{
+    display: "grid",
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.xl,
+  }}
+>
         {question.options.map((option) => (
           <OptionCard
             key={option.id}
