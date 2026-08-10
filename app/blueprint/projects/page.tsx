@@ -8,12 +8,20 @@ import {
   createNewBlueprintProject,
   deleteBlueprintProject,
   getBlueprintProjects,
+  importBlueprintProject,
   renameBlueprintProject,
   setActiveBlueprintProject,
   updateBlueprintHomeName,
   type StoredBlueprintProject,
 } from "@/lib/blueprint/storage";
 import { theme } from "@/lib/constants/theme";
+import type {
+  DatabaseBlueprintProject,
+} from "@/lib/supabase/blueprintProjects";
+
+import {
+  syncBlueprintsWithAccount,
+} from "./actions";
 
 function formatUpdatedDate(value: string): string {
   const date = new Date(value);
@@ -43,6 +51,47 @@ function getProjectProgress(
     Math.max(estimatedProgress, 5),
     95,
   );
+}
+
+function getTimestamp(value: string): number {
+  const timestamp = new Date(value).getTime();
+
+  return Number.isNaN(timestamp)
+    ? 0
+    : timestamp;
+}
+
+function mapRemoteToLocal(
+  remote: DatabaseBlueprintProject,
+  existingLocal?: StoredBlueprintProject,
+): StoredBlueprintProject {
+  return {
+    id: remote.id,
+
+    ownerId: remote.ownerId,
+
+    name: remote.name,
+    homeName: remote.homeName,
+
+    answers: remote.answers,
+
+    currentSessionId:
+      remote.currentSessionId,
+
+    currentQuestionId:
+      remote.currentQuestionId,
+
+    status: remote.status,
+
+    createdAt: remote.createdAt,
+    updatedAt: remote.updatedAt,
+
+    sessionIndex:
+      existingLocal?.sessionIndex ?? 0,
+
+    questionIndex:
+      existingLocal?.questionIndex ?? 0,
+  };
 }
 
 export default function BlueprintProjectsPage() {
@@ -79,9 +128,88 @@ export default function BlueprintProjectsPage() {
   }
 
   useEffect(() => {
-    refreshProjects();
-    setHasLoaded(true);
-  }, []);
+  let isCancelled = false;
+
+  async function loadAndSyncProjects() {
+    try {
+      const localProjects =
+        getBlueprintProjects();
+
+      const localById = new Map(
+        localProjects.map((project) => [
+          project.id,
+          project,
+        ]),
+      );
+
+      const syncResult =
+        await syncBlueprintsWithAccount(
+          localProjects,
+        );
+
+      for (
+        const remoteProject
+        of syncResult.remoteProjects
+      ) {
+        const localProject =
+          localById.get(remoteProject.id);
+
+        /*
+         * Project exists only in Supabase.
+         * Import it into this browser.
+         */
+        if (!localProject) {
+          importBlueprintProject(
+            mapRemoteToLocal(remoteProject),
+            false,
+          );
+
+          continue;
+        }
+
+        /*
+         * Both copies exist.
+         * If Supabase is newer, update localStorage.
+         */
+        const localUpdated =
+          getTimestamp(localProject.updatedAt);
+
+        const remoteUpdated =
+          getTimestamp(remoteProject.updatedAt);
+
+        if (remoteUpdated > localUpdated) {
+          importBlueprintProject(
+            mapRemoteToLocal(
+              remoteProject,
+              localProject,
+            ),
+            false,
+          );
+        }
+      }
+    } catch (error) {
+      /*
+       * Keep My Blueprints usable from localStorage
+       * even if account sync temporarily fails.
+       */
+      console.error(
+        "Blueprint account sync failed:",
+        error,
+      );
+    } finally {
+      if (!isCancelled) {
+        refreshProjects();
+        setHasLoaded(true);
+      }
+    }
+  }
+
+  void loadAndSyncProjects();
+
+  return () => {
+    isCancelled = true;
+  };
+}, []);
 
   function openProject(
     project: StoredBlueprintProject,
