@@ -7,6 +7,13 @@ import { projectTypeGuidance } from "@/data/consultation/discovery";
 import { blueprintSessions } from "@/data/consultation/sessions";
 import { useBlueprint } from "@/hooks/useBlueprint";
 import { theme } from "@/lib/constants/theme";
+import {
+  loadBlueprintProject,
+  markBlueprintComplete,
+} from "@/lib/blueprint/storage";
+import {
+  createBlueprintInAccount,
+} from "@/app/blueprint/projects/actions";
 
 export function BlueprintWorkspace() {
   const router = useRouter();
@@ -31,12 +38,28 @@ export function BlueprintWorkspace() {
   sessionIndex === blueprintSessions.length - 1 &&
   safeQuestionIndex === visibleQuestions.length - 1;
 
-function handleContinue() {
+async function handleContinue() {
   if (!canContinue) {
     return;
   }
 
   if (isFinalQuestion) {
+    const completedProject =
+      markBlueprintComplete();
+
+    if (completedProject) {
+      try {
+        await createBlueprintInAccount(
+          completedProject,
+        );
+      } catch (error) {
+        console.error(
+          "Failed to sync completed Blueprint:",
+          error,
+        );
+      }
+    }
+
     router.push("/blueprint/results");
     return;
   }

@@ -20,6 +20,8 @@ import type {
 } from "@/lib/supabase/blueprintProjects";
 
 import {
+  createBlueprintInAccount,
+  deleteBlueprintFromAccount,
   syncBlueprintsWithAccount,
 } from "./actions";
 
@@ -229,15 +231,30 @@ export default function BlueprintProjectsPage() {
     router.push("/blueprint");
   }
 
-  function createProject() {
+  async function createProject() {
+  const project =
     createNewBlueprintProject({
       name: `Smart Home Blueprint ${
         projects.length + 1
       }`,
     });
 
-    router.push("/blueprint");
+  try {
+    await createBlueprintInAccount(project);
+  } catch (error) {
+    console.error(
+      "Failed to create Blueprint in account:",
+      error,
+    );
+
+    /*
+     * Keep the locally created Blueprint.
+     * The next successful account sync can upload it.
+     */
   }
+
+  router.push("/blueprint");
+}
 
   function beginEditing(
     project: StoredBlueprintProject,
@@ -274,19 +291,30 @@ export default function BlueprintProjectsPage() {
     refreshProjects();
   }
 
-  function confirmDelete(
-    projectId: string,
-  ) {
-    deleteBlueprintProject(projectId);
+  async function confirmDelete(
+  projectId: string,
+) {
+  try {
+    await deleteBlueprintFromAccount(projectId);
+  } catch (error) {
+    console.error(
+      "Failed to delete Blueprint from account:",
+      error,
+    );
 
-    setDeleteProjectId(null);
-
-    if (editingProjectId === projectId) {
-      cancelEditing();
-    }
-
-    refreshProjects();
+    return;
   }
+
+  deleteBlueprintProject(projectId);
+
+  setDeleteProjectId(null);
+
+  if (editingProjectId === projectId) {
+    cancelEditing();
+  }
+
+  refreshProjects();
+}
 
   if (!hasLoaded) {
     return (

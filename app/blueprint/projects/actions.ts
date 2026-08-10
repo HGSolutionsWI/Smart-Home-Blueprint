@@ -1,6 +1,7 @@
 "use server";
 
 import {
+  deleteDatabaseBlueprintProject,
   getDatabaseBlueprintProjects,
   upsertDatabaseBlueprintProject,
   type DatabaseBlueprintProject,
@@ -114,4 +115,34 @@ export async function syncBlueprintsWithAccount(
     unchanged,
     remoteProjects: finalRemoteProjects,
   };
+}
+
+export async function createBlueprintInAccount(
+  project: StoredBlueprintProject,
+): Promise<void> {
+  await upsertDatabaseBlueprintProject({
+    id: project.id,
+
+    name: project.name,
+    homeName: project.homeName,
+
+    answers: project.answers,
+
+    currentSessionId:
+      project.currentSessionId,
+
+    currentQuestionId:
+      project.currentQuestionId,
+
+    status: project.status,
+
+    createdAt: project.createdAt,
+    updatedAt: project.updatedAt,
+  });
+}
+
+export async function deleteBlueprintFromAccount(
+  projectId: string,
+): Promise<void> {
+  await deleteDatabaseBlueprintProject(projectId);
 }
