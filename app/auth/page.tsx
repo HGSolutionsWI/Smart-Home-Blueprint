@@ -3,13 +3,14 @@ import { signIn, signUp } from "./actions";
 type AuthPageProps = {
   searchParams: Promise<{
     message?: string;
+    intent?: string;
   }>;
 };
 
 export default async function AuthPage({
   searchParams,
 }: AuthPageProps) {
-  const { message } = await searchParams;
+  const { message, intent } = await searchParams;
 
   return (
     <main
@@ -74,112 +75,118 @@ export default async function AuthPage({
         )}
 
         <form
-          style={{
-            display: "grid",
-            gap: "16px",
-            padding: "24px",
-            border: "1px solid #E2E8F0",
-            borderRadius: "16px",
-            background: "#FFFFFF",
-          }}
-        >
-          <label
-            style={{
-              display: "grid",
-              gap: "6px",
-            }}
-          >
-            <span
-              style={{
-                fontWeight: 700,
-                color: "#0F172A",
-              }}
-            >
-              Email
-            </span>
+  style={{
+    display: "grid",
+    gap: "16px",
+    padding: "24px",
+    border: "1px solid #E2E8F0",
+    borderRadius: "16px",
+    background: "#FFFFFF",
+  }}
+>
+  <input
+    type="hidden"
+    name="intent"
+    value={intent ?? ""}
+  />
 
-            <input
-              name="email"
-              type="email"
-              required
-              autoComplete="email"
-              style={{
-                border: "1px solid #CBD5E1",
-                borderRadius: "10px",
-                padding: "12px",
-                font: "inherit",
-              }}
-            />
-          </label>
+  <label
+    style={{
+      display: "grid",
+      gap: "6px",
+    }}
+  >
+    <span
+      style={{
+        fontWeight: 700,
+        color: "#0F172A",
+      }}
+    >
+      Email
+    </span>
 
-          <label
-            style={{
-              display: "grid",
-              gap: "6px",
-            }}
-          >
-            <span
-              style={{
-                fontWeight: 700,
-                color: "#0F172A",
-              }}
-            >
-              Password
-            </span>
+    <input
+      name="email"
+      type="email"
+      required
+      autoComplete="email"
+      style={{
+        border: "1px solid #CBD5E1",
+        borderRadius: "10px",
+        padding: "12px",
+        font: "inherit",
+      }}
+    />
+  </label>
 
-            <input
-              name="password"
-              type="password"
-              required
-              minLength={6}
-              autoComplete="current-password"
-              style={{
-                border: "1px solid #CBD5E1",
-                borderRadius: "10px",
-                padding: "12px",
-                font: "inherit",
-              }}
-            />
-          </label>
+  <label
+    style={{
+      display: "grid",
+      gap: "6px",
+    }}
+  >
+    <span
+      style={{
+        fontWeight: 700,
+        color: "#0F172A",
+      }}
+    >
+      Password
+    </span>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "12px",
-            }}
-          >
-            <button
-              formAction={signIn}
-              style={{
-                border: "none",
-                borderRadius: "10px",
-                padding: "12px",
-                background: "#2563EB",
-                color: "#FFFFFF",
-                fontWeight: 800,
-                cursor: "pointer",
-              }}
-            >
-              Sign In
-            </button>
+    <input
+      name="password"
+      type="password"
+      required
+      minLength={6}
+      autoComplete="current-password"
+      style={{
+        border: "1px solid #CBD5E1",
+        borderRadius: "10px",
+        padding: "12px",
+        font: "inherit",
+      }}
+    />
+  </label>
 
-            <button
-              formAction={signUp}
-              style={{
-                border: "1px solid #CBD5E1",
-                borderRadius: "10px",
-                padding: "12px",
-                background: "#FFFFFF",
-                color: "#0F172A",
-                fontWeight: 800,
-                cursor: "pointer",
-              }}
-            >
-              Create Account
-            </button>
-          </div>
-        </form>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: "12px",
+    }}
+  >
+    <button
+      formAction={signIn}
+      style={{
+        border: "none",
+        borderRadius: "10px",
+        padding: "12px",
+        background: "#2563EB",
+        color: "#FFFFFF",
+        fontWeight: 800,
+        cursor: "pointer",
+      }}
+    >
+      Sign In
+    </button>
+
+    <button
+      formAction={signUp}
+      style={{
+        border: "1px solid #CBD5E1",
+        borderRadius: "10px",
+        padding: "12px",
+        background: "#FFFFFF",
+        color: "#0F172A",
+        fontWeight: 800,
+        cursor: "pointer",
+      }}
+    >
+      Create Account
+    </button>
+  </div>
+</form>
       </div>
     </main>
   );

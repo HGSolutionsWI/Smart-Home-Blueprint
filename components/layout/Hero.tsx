@@ -1,6 +1,7 @@
 import { PrimaryButton } from "@/components/ui/Button/PrimaryButton";
 import { Card } from "@/components/ui/Card/card";
 import { theme } from "@/lib/constants/theme";
+import Link from "next/link";
 
 export function Hero() {
   return (
@@ -56,7 +57,16 @@ export function Hero() {
           coordination before construction begins.
         </p>
 
-        <PrimaryButton>Start My Blueprint</PrimaryButton>
+        <Link
+  href="/auth?intent=start-blueprint"
+  style={{
+    textDecoration: "none",
+  }}
+>
+  <PrimaryButton>
+    Start My Blueprint
+  </PrimaryButton>
+</Link>
       </Card>
     </section>
   );

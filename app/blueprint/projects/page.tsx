@@ -1,7 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import {
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 
 import {
@@ -99,6 +106,10 @@ function mapRemoteToLocal(
 
 export default function BlueprintProjectsPage() {
   const router = useRouter();
+
+  const searchParams = useSearchParams();
+
+  const hasHandledCreateIntent = useRef(false);
 
   const [projects, setProjects] = useState<
     StoredBlueprintProject[]
@@ -242,6 +253,22 @@ export default function BlueprintProjectsPage() {
     isCancelled = true;
   };
 }, []);
+
+useEffect(() => {
+  if (
+    hasHandledCreateIntent.current ||
+    !hasLoaded ||
+    searchParams.get("create") !== "1"
+  ) {
+    return;
+  }
+
+  hasHandledCreateIntent.current = true;
+
+  void createProject();
+
+  router.replace("/blueprint/projects");
+}, [hasLoaded, searchParams, router]);
 
   function openProject(
     project: StoredBlueprintProject,
