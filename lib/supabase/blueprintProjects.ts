@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+
 import type {
   BlueprintAnswers,
   BlueprintProjectStatus,
@@ -40,6 +41,37 @@ type BlueprintProjectRow = {
   updated_at: string;
 };
 
+export type CreateDatabaseBlueprintProjectInput = {
+  id?: string;
+
+  name?: string;
+  homeName?: string;
+
+  answers?: BlueprintAnswers;
+
+  currentSessionId?: string;
+  currentQuestionId?: string;
+
+  status?: BlueprintProjectStatus;
+
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type UpdateDatabaseBlueprintProjectInput = {
+  name?: string;
+  homeName?: string | null;
+
+  answers?: BlueprintAnswers;
+
+  currentSessionId?: string;
+  currentQuestionId?: string;
+
+  status?: BlueprintProjectStatus;
+
+  updatedAt?: string;
+};
+
 function mapRowToProject(
   row: BlueprintProjectRow,
 ): DatabaseBlueprintProject {
@@ -77,6 +109,9 @@ async function getAuthenticatedUserId(): Promise<string> {
   return user.id;
 }
 
+/*
+ * Returns every Blueprint owned by the signed-in user.
+ */
 export async function getDatabaseBlueprintProjects():
   Promise<DatabaseBlueprintProject[]> {
   const supabase = await createClient();
@@ -96,10 +131,17 @@ export async function getDatabaseBlueprintProjects():
   }
 
   return (data ?? []).map((row) =>
-    mapRowToProject(row as BlueprintProjectRow),
+    mapRowToProject(
+      row as BlueprintProjectRow,
+    ),
   );
 }
 
+/*
+ * Returns one Blueprint if it belongs to the signed-in user.
+ *
+ * RLS is still the true security boundary.
+ */
 export async function getDatabaseBlueprintProject(
   projectId: string,
 ): Promise<DatabaseBlueprintProject | null> {
@@ -127,18 +169,14 @@ export async function getDatabaseBlueprintProject(
   );
 }
 
+/*
+ * Creates a database Blueprint.
+ *
+ * An existing local project ID can be supplied so the
+ * localStorage project and Supabase project share one identity.
+ */
 export async function createDatabaseBlueprintProject(
-  input?: {
-    name?: string;
-    homeName?: string;
-
-    answers?: BlueprintAnswers;
-
-    currentSessionId?: string;
-    currentQuestionId?: string;
-
-    status?: BlueprintProjectStatus;
-  },
+  input: CreateDatabaseBlueprintProjectInput = {},
 ): Promise<DatabaseBlueprintProject> {
   const supabase = await createClient();
 
@@ -146,35 +184,52 @@ export async function createDatabaseBlueprintProject(
 
   const now = new Date().toISOString();
 
+  const insertPayload: Record<
+    string,
+    unknown
+  > = {
+    owner_id: userId,
+
+    name:
+      input.name ??
+      "My Smart Home Blueprint",
+
+    home_name:
+      input.homeName?.trim() || null,
+
+    answers:
+      input.answers ?? {},
+
+    current_session_id:
+      input.currentSessionId ??
+      "discovery",
+
+    current_question_id:
+      input.currentQuestionId ??
+      "projectType",
+
+    status:
+      input.status ??
+      "in-progress",
+
+    created_at:
+      input.createdAt ?? now,
+
+    updated_at:
+      input.updatedAt ?? now,
+  };
+
+  /*
+   * If a local Blueprint already has an ID,
+   * preserve it in Supabase.
+   */
+  if (input.id) {
+    insertPayload.id = input.id;
+  }
+
   const { data, error } = await supabase
     .from("blueprint_projects")
-    .insert({
-      owner_id: userId,
-
-      name:
-        input?.name ??
-        "My Smart Home Blueprint",
-
-      home_name:
-        input?.homeName?.trim() || null,
-
-      answers:
-        input?.answers ?? {},
-
-      current_session_id:
-        input?.currentSessionId ??
-        "discovery",
-
-      current_question_id:
-        input?.currentQuestionId ??
-        "projectType",
-
-      status:
-        input?.status ??
-        "in-progress",
-
-      updated_at: now,
-    })
+    .insert(insertPayload)
     .select("*")
     .single();
 
@@ -187,19 +242,12 @@ export async function createDatabaseBlueprintProject(
   );
 }
 
+/*
+ * Updates an existing Blueprint owned by the user.
+ */
 export async function updateDatabaseBlueprintProject(
   projectId: string,
-  updates: {
-    name?: string;
-    homeName?: string | null;
-
-    answers?: BlueprintAnswers;
-
-    currentSessionId?: string;
-    currentQuestionId?: string;
-
-    status?: BlueprintProjectStatus;
-  },
+  updates: UpdateDatabaseBlueprintProjectInput,
 ): Promise<DatabaseBlueprintProject> {
   const supabase = await createClient();
 
@@ -209,11 +257,14 @@ export async function updateDatabaseBlueprintProject(
     string,
     unknown
   > = {
-    updated_at: new Date().toISOString(),
+    updated_at:
+      updates.updatedAt ??
+      new Date().toISOString(),
   };
 
   if (updates.name !== undefined) {
-    updatePayload.name = updates.name;
+    updatePayload.name =
+      updates.name;
   }
 
   if (updates.homeName !== undefined) {
@@ -262,6 +313,59 @@ export async function updateDatabaseBlueprintProject(
   );
 }
 
+/*
+ * Creates the Blueprint if it does not exist.
+ *
+ * If it already exists for the current user, it is updated.
+ *
+ * This is the main function the local-to-database sync
+ * layer will use.
+ */
+export async function upsertDatabaseBlueprintProject(
+  input: CreateDatabaseBlueprintProjectInput & {
+    id: string;
+  },
+): Promise<DatabaseBlueprintProject> {
+  const existing =
+    await getDatabaseBlueprintProject(
+      input.id,
+    );
+
+  if (existing) {
+    return updateDatabaseBlueprintProject(
+      input.id,
+      {
+        name: input.name,
+
+        homeName:
+          input.homeName ?? null,
+
+        answers:
+          input.answers,
+
+        currentSessionId:
+          input.currentSessionId,
+
+        currentQuestionId:
+          input.currentQuestionId,
+
+        status:
+          input.status,
+
+        updatedAt:
+          input.updatedAt,
+      },
+    );
+  }
+
+  return createDatabaseBlueprintProject(
+    input,
+  );
+}
+
+/*
+ * Deletes a Blueprint owned by the signed-in user.
+ */
 export async function deleteDatabaseBlueprintProject(
   projectId: string,
 ): Promise<void> {
