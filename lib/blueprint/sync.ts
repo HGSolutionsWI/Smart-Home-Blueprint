@@ -6,14 +6,11 @@ import {
 
 import {
   getBlueprintProjects,
+  importBlueprintProject,
   updateBlueprintProject,
   type StoredBlueprintProject,
 } from "@/lib/blueprint/storage";
 
-/*
- * Sync result returned to the UI so we can show
- * what actually happened.
- */
 export type BlueprintSyncResult = {
   uploaded: number;
   downloaded: number;
@@ -22,19 +19,20 @@ export type BlueprintSyncResult = {
   unchanged: number;
 };
 
-/*
- * Converts a database project into the local project shape.
- *
- * sessionIndex and questionIndex remain local compatibility
- * fields for now, so we preserve the local values when possible.
- */
-function mergeDatabaseIntoLocal(
+function getTimestamp(value: string): number {
+  const timestamp = new Date(value).getTime();
+
+  return Number.isNaN(timestamp)
+    ? 0
+    : timestamp;
+}
+
+function mapRemoteToLocal(
   remote: DatabaseBlueprintProject,
   existingLocal?: StoredBlueprintProject,
 ): StoredBlueprintProject {
   return {
     id: remote.id,
-
     ownerId: remote.ownerId,
 
     name: remote.name,
@@ -42,8 +40,11 @@ function mergeDatabaseIntoLocal(
 
     answers: remote.answers,
 
-    currentSessionId: remote.currentSessionId,
-    currentQuestionId: remote.currentQuestionId,
+    currentSessionId:
+      remote.currentSessionId,
+
+    currentQuestionId:
+      remote.currentQuestionId,
 
     status: remote.status,
 
@@ -58,26 +59,6 @@ function mergeDatabaseIntoLocal(
   };
 }
 
-function getTimestamp(value: string): number {
-  const timestamp = new Date(value).getTime();
-
-  return Number.isNaN(timestamp)
-    ? 0
-    : timestamp;
-}
-
-/*
- * Synchronizes the complete local Blueprint library
- * with the signed-in user's Supabase library.
- *
- * Conflict rule:
- *
- * - same ID exists both places
- * - whichever updatedAt is newer wins
- *
- * This keeps the behavior predictable and prevents
- * duplicate projects.
- */
 export async function syncBlueprintLibrary():
   Promise<BlueprintSyncResult> {
   const localProjects =
@@ -106,18 +87,10 @@ export async function syncBlueprintLibrary():
   let updatedRemote = 0;
   let unchanged = 0;
 
-  /*
-   * First pass:
-   * Push local-only projects and resolve projects
-   * that exist in both places.
-   */
   for (const localProject of localProjects) {
     const remoteProject =
       remoteById.get(localProject.id);
 
-    /*
-     * Local project does not exist in Supabase yet.
-     */
     if (!remoteProject) {
       await upsertDatabaseBlueprintProject({
         id: localProject.id,
@@ -140,7 +113,6 @@ export async function syncBlueprintLibrary():
       });
 
       uploaded += 1;
-
       continue;
     }
 
@@ -150,9 +122,6 @@ export async function syncBlueprintLibrary():
     const remoteUpdated =
       getTimestamp(remoteProject.updatedAt);
 
-    /*
-     * Local copy is newer.
-     */
     if (localUpdated > remoteUpdated) {
       await upsertDatabaseBlueprintProject({
         id: localProject.id,
@@ -175,16 +144,12 @@ export async function syncBlueprintLibrary():
       });
 
       updatedRemote += 1;
-
       continue;
     }
 
-    /*
-     * Remote copy is newer.
-     */
     if (remoteUpdated > localUpdated) {
       const mergedProject =
-        mergeDatabaseIntoLocal(
+        mapRemoteToLocal(
           remoteProject,
           localProject,
         );
@@ -195,28 +160,26 @@ export async function syncBlueprintLibrary():
       );
 
       updatedLocal += 1;
-
       continue;
     }
 
     unchanged += 1;
   }
 
-  /*
-   * Second pass:
-   * Download projects that exist only in Supabase.
-   *
-   * updateBlueprintProject cannot create a missing
-   * local project, so we handle these separately in
-   * a later helper once we add local import support.
-   *
-   * For now, we count them so we can verify the sync
-   * state without risking the current storage layer.
-   */
   for (const remoteProject of remoteProjects) {
-    if (!localById.has(remoteProject.id)) {
-      downloaded += 1;
+    if (localById.has(remoteProject.id)) {
+      continue;
     }
+
+    const localProject =
+      mapRemoteToLocal(remoteProject);
+
+    importBlueprintProject(
+      localProject,
+      false,
+    );
+
+    downloaded += 1;
   }
 
   return {

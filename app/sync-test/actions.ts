@@ -3,17 +3,19 @@
 import {
   getDatabaseBlueprintProjects,
   upsertDatabaseBlueprintProject,
+  type DatabaseBlueprintProject,
 } from "@/lib/supabase/blueprintProjects";
 
 import type {
   StoredBlueprintProject,
 } from "@/lib/blueprint/storage";
 
-export type SyncUploadResult = {
+export type TwoWaySyncServerResult = {
   uploaded: number;
-  updated: number;
+  updatedRemote: number;
   unchanged: number;
-  remoteTotal: number;
+
+  remoteProjects: DatabaseBlueprintProject[];
 };
 
 function getTimestamp(value: string): number {
@@ -24,9 +26,9 @@ function getTimestamp(value: string): number {
     : timestamp;
 }
 
-export async function syncLocalProjectsToDatabase(
+export async function syncProjectsWithDatabase(
   localProjects: StoredBlueprintProject[],
-): Promise<SyncUploadResult> {
+): Promise<TwoWaySyncServerResult> {
   const remoteProjects =
     await getDatabaseBlueprintProjects();
 
@@ -38,7 +40,7 @@ export async function syncLocalProjectsToDatabase(
   );
 
   let uploaded = 0;
-  let updated = 0;
+  let updatedRemote = 0;
   let unchanged = 0;
 
   for (const localProject of localProjects) {
@@ -97,7 +99,7 @@ export async function syncLocalProjectsToDatabase(
         updatedAt: localProject.updatedAt,
       });
 
-      updated += 1;
+      updatedRemote += 1;
       continue;
     }
 
@@ -109,8 +111,10 @@ export async function syncLocalProjectsToDatabase(
 
   return {
     uploaded,
-    updated,
+    updatedRemote,
     unchanged,
-    remoteTotal: finalRemoteProjects.length,
+
+    remoteProjects:
+      finalRemoteProjects,
   };
 }

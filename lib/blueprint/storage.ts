@@ -384,6 +384,40 @@ export function createNewBlueprintProject(
 }
 
 /*
+ * Imports a Blueprint from an external source such as Supabase.
+ *
+ * The existing project ID is preserved so the local and
+ * database copies share the same identity.
+ */
+export function importBlueprintProject(
+  project: StoredBlueprintProject,
+  makeActive = false,
+): StoredBlueprintProject {
+  const library = loadBlueprintLibrary();
+
+  const existing = library.projects.find(
+    (candidate) => candidate.id === project.id,
+  );
+
+  const projects = existing
+    ? library.projects.map((candidate) =>
+        candidate.id === project.id
+          ? project
+          : candidate,
+      )
+    : [...library.projects, project];
+
+  writeLibrary({
+    activeProjectId: makeActive
+      ? project.id
+      : library.activeProjectId ?? project.id,
+    projects,
+  });
+
+  return project;
+}
+
+/*
  * Saves the currently active project.
  *
  * This deliberately supports the existing useBlueprint.ts
