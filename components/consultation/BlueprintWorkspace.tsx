@@ -8,7 +8,6 @@ import { blueprintSessions } from "@/data/consultation/sessions";
 import { useBlueprint } from "@/hooks/useBlueprint";
 import { theme } from "@/lib/constants/theme";
 import {
-  loadBlueprintProject,
   markBlueprintComplete,
 } from "@/lib/blueprint/storage";
 import {
