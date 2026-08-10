@@ -6,6 +6,7 @@ const navigationItems = [
   { label: "Features", href: "/features" },
   { label: "Pricing", href: "/pricing" },
   { label: "FAQ", href: "/faq" },
+  { label: "My Blueprints", href: "/blueprint/projects" },
 ];
 
 export function Header() {
@@ -76,7 +77,7 @@ export function Header() {
         ))}
 
         <Link
-          href="/login"
+  href="/auth"
           style={{
             color: theme.colors.primaryDark,
             background: theme.colors.surface,
