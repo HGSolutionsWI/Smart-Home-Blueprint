@@ -1,4 +1,7 @@
 import Link from "next/link";
+
+import { SignOutButton } from "@/components/auth/SignOutButton";
+import { createClient } from "@/lib/supabase/server";
 import { theme } from "@/lib/constants/theme";
 
 const navigationItems = [
@@ -9,7 +12,13 @@ const navigationItems = [
   { label: "My Blueprints", href: "/blueprint/projects" },
 ];
 
-export function Header() {
+export async function Header() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <header
       style={{
@@ -76,20 +85,24 @@ export function Header() {
           </Link>
         ))}
 
-        <Link
-  href="/auth"
-          style={{
-            color: theme.colors.primaryDark,
-            background: theme.colors.surface,
-            textDecoration: "none",
-            borderRadius: theme.radius.medium,
-            padding: `${theme.spacing.sm} ${theme.spacing.md}`,
-            fontSize: "0.9rem",
-            fontWeight: 700,
-          }}
-        >
-          Log In
-        </Link>
+        {user ? (
+          <SignOutButton />
+        ) : (
+          <Link
+            href="/auth"
+            style={{
+              color: theme.colors.primaryDark,
+              background: theme.colors.surface,
+              textDecoration: "none",
+              borderRadius: theme.radius.medium,
+              padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+              fontSize: "0.9rem",
+              fontWeight: 700,
+            }}
+          >
+            Log In
+          </Link>
+        )}
       </nav>
     </header>
   );
