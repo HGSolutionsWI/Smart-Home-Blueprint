@@ -4,7 +4,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { theme } from "@/lib/constants/theme";
 import type {
@@ -13,12 +13,13 @@ import type {
 
 import {
   getBlueprintPlans,
-  getBlueprintPlanViewUrl,
   uploadBlueprintPlan,
 } from "./actions";
 
 export default function BlueprintPlansPage() {
   const searchParams = useSearchParams();
+
+  const router = useRouter();
 
   const projectId =
     searchParams.get("project");
@@ -101,31 +102,14 @@ export default function BlueprintPlansPage() {
     }
   }
 
-  async function handleViewPlan(
-    planId: string,
-  ) {
-    try {
-      setMessage(null);
-
-      const url =
-        await getBlueprintPlanViewUrl(
-          planId,
-        );
-
-      window.open(
-        url,
-        "_blank",
-        "noopener,noreferrer",
-      );
-    } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Unable to open plan.",
-      );
-    }
-  }
-
+  function handleViewPlan(
+  planId: string,
+) {
+  router.push(
+    `/blueprint/plans/${planId}`,
+  );
+}
+  
   return (
     <main
       style={{

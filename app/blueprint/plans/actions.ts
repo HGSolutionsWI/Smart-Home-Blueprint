@@ -8,6 +8,15 @@ import {
   type DatabaseBlueprintPlan,
 } from "@/lib/supabase/blueprintPlans";
 
+import {
+  createDatabaseBlueprintPlanMarker,
+  deleteDatabaseBlueprintPlanMarker,
+  getDatabaseBlueprintPlanMarkers,
+  updateDatabaseBlueprintPlanMarker,
+  type BlueprintPlanMarkerType,
+  type DatabaseBlueprintPlanMarker,
+} from "@/lib/supabase/blueprintPlanMarkers";
+
 import { createClient } from "@/lib/supabase/server";
 
 const MAX_PLAN_FILE_SIZE = 25 * 1024 * 1024;
@@ -108,4 +117,46 @@ export async function deleteBlueprintPlan(
   planId: string,
 ): Promise<void> {
   await deleteDatabaseBlueprintPlan(planId);
+}
+
+export async function getBlueprintPlanMarkers(
+  planId: string,
+): Promise<DatabaseBlueprintPlanMarker[]> {
+  return getDatabaseBlueprintPlanMarkers(planId);
+}
+
+export async function createBlueprintPlanMarker(input: {
+  planId: string;
+  projectId: string;
+  markerType: BlueprintPlanMarkerType;
+  label?: string;
+  notes?: string;
+  xPosition: number;
+  yPosition: number;
+}): Promise<DatabaseBlueprintPlanMarker> {
+  return createDatabaseBlueprintPlanMarker(input);
+}
+
+export async function updateBlueprintPlanMarker(
+  markerId: string,
+  updates: {
+    markerType?: BlueprintPlanMarkerType;
+    label?: string;
+    notes?: string | null;
+    xPosition?: number;
+    yPosition?: number;
+  },
+): Promise<DatabaseBlueprintPlanMarker> {
+  return updateDatabaseBlueprintPlanMarker(
+    markerId,
+    updates,
+  );
+}
+
+export async function deleteBlueprintPlanMarker(
+  markerId: string,
+): Promise<void> {
+  await deleteDatabaseBlueprintPlanMarker(
+    markerId,
+  );
 }
