@@ -9,7 +9,6 @@ import {
   useRouter,
   useSearchParams,
 } from "next/navigation";
-import { SignOutButton } from "@/components/auth/SignOutButton";
 
 import {
   createNewBlueprintProject,
@@ -464,33 +463,22 @@ useEffect(() => {
             </p>
           </div>
 
-          <div
+          <button
+  type="button"
+  onClick={createProject}
   style={{
-    display: "flex",
-    gap: theme.spacing.sm,
-    alignItems: "center",
-    flexWrap: "wrap",
+    border: "none",
+    borderRadius: theme.radius.large,
+    background: theme.colors.primary,
+    color: "#FFFFFF",
+    padding: "14px 20px",
+    fontWeight: 800,
+    fontSize: "0.95rem",
+    cursor: "pointer",
   }}
 >
-  <SignOutButton />
-
-  <button
-    type="button"
-    onClick={createProject}
-    style={{
-      border: "none",
-      borderRadius: theme.radius.large,
-      background: theme.colors.primary,
-      color: "#FFFFFF",
-      padding: "14px 20px",
-      fontWeight: 800,
-      fontSize: "0.95rem",
-      cursor: "pointer",
-    }}
-  >
-    + Create New Blueprint
-  </button>
-</div>
+  + Create New Blueprint
+</button>
         </header>
 
         {projects.length === 0 ? (
@@ -789,20 +777,19 @@ useEffect(() => {
                   ) : (
                     <>
                       {project.homeName &&
-                        project.homeName !==
-                          project.name && (
-                          <p
-                            style={{
-                              color:
-                                theme.colors.textLight,
-                              marginTop: 0,
-                              marginBottom:
-                                theme.spacing.md,
-                            }}
-                          >
-                            {project.name}
-                          </p>
-                        )}
+  project.homeName !== project.name && (
+    <p
+      style={{
+        color: theme.colors.textLight,
+        fontSize: "0.85rem",
+        fontWeight: 600,
+        marginTop: theme.spacing.xs,
+        marginBottom: theme.spacing.md,
+      }}
+    >
+      {project.name}
+    </p>
+  )}
 
                       <div
                         style={{
@@ -852,18 +839,7 @@ useEffect(() => {
                             project.updatedAt,
                           )}
                         </p>
-
-                        <p
-                          style={{
-                            color:
-                              theme.colors.textLight,
-                            fontSize: "0.8rem",
-                            margin: 0,
-                          }}
-                        >
-                          Project ID:{" "}
-                          {project.id.slice(0, 8)}
-                        </p>
+                      
                       </div>
                     </>
                   )}
@@ -929,29 +905,24 @@ useEffect(() => {
                         </button>
 
                         <button
-                          type="button"
-                          onClick={() =>
-                            setDeleteProjectId(
-                              project.id,
-                            )
-                          }
-                          style={{
-                            border: `1px solid ${theme.colors.border}`,
-                            borderRadius:
-                              theme.radius.medium,
-                            background:
-                              theme.colors.surface,
-                            color:
-                              theme.colors.warning,
-                            padding: "10px 12px",
-                            fontWeight: 800,
-                            cursor: "pointer",
-                          }}
-                        >
-                          Delete
-                        </button>
-                      </div>
-
+  type="button"
+  onClick={() =>
+    setDeleteProjectId(project.id)
+  }
+  style={{
+    border: "none",
+    borderRadius: theme.radius.medium,
+    background: "transparent",
+    color: theme.colors.textLight,
+    padding: "10px 12px",
+    fontWeight: 700,
+    cursor: "pointer",
+  }}
+>
+  Delete
+</button>
+</div>
+                      
                       {isConfirmingDelete && (
                         <div
                           style={{
