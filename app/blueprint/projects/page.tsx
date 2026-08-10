@@ -875,6 +875,28 @@ useEffect(() => {
                           : "Resume Blueprint"}
                       </button>
 
+                      {project.status === "complete" && (
+  <button
+    type="button"
+    onClick={() => {
+      setActiveBlueprintProject(project.id);
+      router.push(`/manual?project=${project.id}`);
+    }}
+    style={{
+      width: "100%",
+      border: `1px solid ${theme.colors.primary}`,
+      borderRadius: theme.radius.large,
+      background: "#EAF3FF",
+      color: theme.colors.primaryDark,
+      padding: "13px 16px",
+      fontWeight: 800,
+      cursor: "pointer",
+    }}
+  >
+    Open Smart Home Manual
+  </button>
+)}
+
                       <div
                         style={{
                           display: "grid",
