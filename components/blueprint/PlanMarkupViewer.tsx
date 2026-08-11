@@ -6,6 +6,8 @@ import {
   useState,
 } from "react";
 
+import Link from "next/link";
+
 import {
   createBlueprintPlanMarker,
   deleteBlueprintPlanMarker,
@@ -1402,12 +1404,27 @@ async function handlePathPointPointerUp(
             >
               Save Marker
             </button>
+ {selectedMarker.markerType !== "conduit-pathway" && (
+    <Link
+      href={`/manual/device/new?project=${projectId}&marker=${selectedMarker.id}`}
+      style={{
+        display: "inline-block",
+        border: `1px solid ${theme.colors.primary}`,
+        borderRadius: theme.radius.medium,
+        background: theme.colors.surface,
+        color: theme.colors.primary,
+        textDecoration: "none",
+        padding: "10px 14px",
+        fontWeight: 800,
+      }}
+    >
+      Add to Smart Manual
+    </Link>
+  )}
 
-            <button
+  <button
               type="button"
-              onClick={
-                handleDeleteMarker
-              }
+              onClick={handleDeleteMarker}
               disabled={isSaving}
               style={{
                 border: `1px solid ${theme.colors.warning}`,

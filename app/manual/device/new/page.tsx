@@ -1,4 +1,7 @@
 import Link from "next/link";
+import {
+  getDatabaseBlueprintPlanMarker,
+} from "@/lib/supabase/blueprintPlanMarkers";
 
 import { ManualDeviceForm } from "@/components/manual/ManualDeviceForm";
 import { getDatabaseBlueprintProject } from "@/lib/supabase/blueprintProjects";
@@ -7,13 +10,14 @@ import { theme } from "@/lib/constants/theme";
 type NewManualDevicePageProps = {
   searchParams: Promise<{
     project?: string;
+    marker?: string;
   }>;
 };
 
 export default async function NewManualDevicePage({
   searchParams,
 }: NewManualDevicePageProps) {
-  const { project } = await searchParams;
+  const { project, marker } = await searchParams;
 
   if (!project) {
     return (
@@ -77,6 +81,21 @@ export default async function NewManualDevicePage({
     await getDatabaseBlueprintProject(
       project,
     );
+
+    const blueprintMarker =
+  marker
+    ? await getDatabaseBlueprintPlanMarker(
+        marker,
+      )
+    : null;
+
+    console.log(
+  "manual new marker debug:",
+  {
+    marker,
+    blueprintMarker,
+  },
+);
 
   const projectName =
     blueprintProject?.homeName?.trim() ||
@@ -154,8 +173,11 @@ export default async function NewManualDevicePage({
         </header>
 
         <ManualDeviceForm
-          projectId={project}
-        />
+  projectId={project}
+  initialBlueprintMarker={
+    blueprintMarker ?? undefined
+  }
+/>
       </div>
     </main>
   );

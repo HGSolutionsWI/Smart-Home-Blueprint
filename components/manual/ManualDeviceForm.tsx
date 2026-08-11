@@ -27,6 +27,7 @@ import { theme } from "@/lib/constants/theme";
 type ManualDeviceFormProps = {
   projectId: string;
   device?: DatabaseSmartManualDevice;
+  initialBlueprintMarker?: DatabaseBlueprintPlanMarker;
 };
 
 const categories: Array<{
@@ -87,6 +88,41 @@ const categories: Array<{
   },
 ];
 
+function getManualCategoryFromMarker(
+  marker?: DatabaseBlueprintPlanMarker,
+): SmartManualDeviceCategory {
+  if (!marker) {
+    return "network";
+  }
+
+  switch (marker.markerType) {
+    case "wifi-access-point":
+      return "wifi";
+
+    case "network-drop":
+    case "equipment-rack":
+      return "network";
+
+    case "camera":
+      return "camera";
+
+    case "tv":
+      return "video";
+
+    case "speaker":
+      return "audio";
+
+    case "sensor":
+      return "sensor";
+
+    case "keypad-control":
+      return "automation";
+
+    default:
+      return "other";
+  }
+}
+
 function formatMarkerLabel(
   marker: DatabaseBlueprintPlanMarker,
 ) {
@@ -107,6 +143,7 @@ function formatMarkerLabel(
 export function ManualDeviceForm({
   projectId,
   device,
+  initialBlueprintMarker,
 }: ManualDeviceFormProps) {
   const router = useRouter();
 
@@ -114,18 +151,20 @@ export function ManualDeviceForm({
     Boolean(device);
 
   const [
-    name,
-    setName,
-  ] = useState(
-    device?.name ?? "",
-  );
+  name,
+  setName,
+] = useState(
+  device?.name ??
+    initialBlueprintMarker?.label ??
+    "",
+);
 
   const [
     category,
     setCategory,
   ] =
     useState<SmartManualDeviceCategory>(
-      device?.category ?? "network",
+      device?.category ?? getManualCategoryFromMarker(initialBlueprintMarker),
     );
 
   const [
@@ -192,18 +231,24 @@ export function ManualDeviceForm({
   );
 
   const [
-    planMarkerId,
-    setPlanMarkerId,
-  ] = useState(
-    device?.planMarkerId ?? "",
-  );
+  planMarkerId,
+  setPlanMarkerId,
+] = useState(
+  device?.planMarkerId ??
+    initialBlueprintMarker?.id ??
+    "",
+);
 
   const [
-    blueprintMarkers,
-    setBlueprintMarkers,
-  ] = useState<
-    DatabaseBlueprintPlanMarker[]
-  >([]);
+  blueprintMarkers,
+  setBlueprintMarkers,
+] = useState<
+  DatabaseBlueprintPlanMarker[]
+>(
+  initialBlueprintMarker
+    ? [initialBlueprintMarker]
+    : [],
+);
 
   const [
     isLoadingMarkers,
@@ -230,32 +275,79 @@ export function ManualDeviceForm({
   );
 
   useEffect(() => {
-    async function loadBlueprintMarkers() {
-      try {
-        setIsLoadingMarkers(true);
-        setMarkerLoadError(null);
+  async function loadBlueprintMarkers() {
+    try {
+      setIsLoadingMarkers(true);
+      setMarkerLoadError(null);
 
-        const markers =
-          await getManualBlueprintMarkers(
-            projectId,
+      const markers =
+        await getManualBlueprintMarkers(
+          projectId,
+        );
+
+      setBlueprintMarkers(() => {
+        if (!initialBlueprintMarker) {
+          return markers;
+        }
+
+        const markerAlreadyIncluded =
+          markers.some(
+            (marker) =>
+              marker.id ===
+              initialBlueprintMarker.id,
           );
 
-        setBlueprintMarkers(
-          markers,
-        );
-      } catch (error) {
-        setMarkerLoadError(
-          error instanceof Error
-            ? error.message
-            : "Unable to load Blueprint markers.",
-        );
-      } finally {
-        setIsLoadingMarkers(false);
-      }
-    }
+        if (markerAlreadyIncluded) {
+          return markers;
+        }
 
-    void loadBlueprintMarkers();
-  }, [projectId]);
+        return [
+          initialBlueprintMarker,
+          ...markers,
+        ];
+      });
+    } catch (error) {
+      setMarkerLoadError(
+        error instanceof Error
+          ? error.message
+          : "Unable to load Blueprint markers.",
+      );
+    } finally {
+      setIsLoadingMarkers(false);
+    }
+  }
+
+  void loadBlueprintMarkers();
+}, [
+  projectId,
+  initialBlueprintMarker,
+]);
+
+useEffect(() => {
+  if (
+    !device &&
+    initialBlueprintMarker
+  ) {
+    setPlanMarkerId(
+      initialBlueprintMarker.id,
+    );
+
+    setName((currentName) =>
+      currentName ||
+      initialBlueprintMarker.label ||
+      "",
+    );
+
+    setCategory(
+      getManualCategoryFromMarker(
+        initialBlueprintMarker,
+      ),
+    );
+  }
+}, [
+  device,
+  initialBlueprintMarker,
+]);
 
   async function handleSubmit(
     event:
@@ -532,34 +624,38 @@ export function ManualDeviceForm({
             </span>
 
             <select
-              value={planMarkerId}
-              onChange={(event) =>
-                setPlanMarkerId(
-                  event.target.value,
-                )
-              }
-              disabled={
-                isLoadingMarkers
-              }
-              style={{
-                ...inputStyle,
+  value={planMarkerId}
+  onChange={(event) =>
+    setPlanMarkerId(
+      event.target.value,
+    )
+  }
+  disabled={
+    isLoadingMarkers &&
+    !initialBlueprintMarker
+  }
+  style={{
+    ...inputStyle,
 
-                opacity:
-                  isLoadingMarkers
-                    ? 0.6
-                    : 1,
+    opacity:
+      isLoadingMarkers &&
+      !initialBlueprintMarker
+        ? 0.6
+        : 1,
 
-                cursor:
-                  isLoadingMarkers
-                    ? "wait"
-                    : "pointer",
-              }}
-            >
+    cursor:
+      isLoadingMarkers &&
+      !initialBlueprintMarker
+        ? "wait"
+        : "pointer",
+  }}
+>
               <option value="">
-                {isLoadingMarkers
-                  ? "Loading Blueprint markers..."
-                  : "Not linked to a Blueprint marker"}
-              </option>
+  {isLoadingMarkers &&
+  !initialBlueprintMarker
+    ? "Loading Blueprint markers..."
+    : "Not linked to a Blueprint marker"}
+</option>
 
               {blueprintMarkers.map(
                 (marker) => (
