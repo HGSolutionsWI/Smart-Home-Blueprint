@@ -19,12 +19,18 @@ type PlanViewerPageProps = {
   params: Promise<{
     planId: string;
   }>;
+
+  searchParams: Promise<{
+    marker?: string;
+  }>;
 };
 
 export default async function PlanViewerPage({
   params,
+  searchParams,
 }: PlanViewerPageProps) {
   const { planId } = await params;
+  const { marker } = await searchParams;
 
   const plan =
     await getDatabaseBlueprintPlan(planId);
@@ -126,11 +132,12 @@ export default async function PlanViewerPage({
   />
 ) : (
   <PlanMarkupViewer
-    planId={plan.id}
-    projectId={plan.projectId}
-    planName={plan.name}
-    imageUrl={planUrl}
-  />
+  planId={plan.id}
+  projectId={plan.projectId}
+  planName={plan.name}
+  imageUrl={planUrl}
+  initialMarkerId={marker}
+/>
 )}
         </section>
       </div>

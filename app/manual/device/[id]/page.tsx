@@ -2,6 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DeleteManualDeviceButton } from "@/components/manual/DeleteManualDeviceButton";
 import { getSmartManualDevice } from "@/lib/supabase/smartManualDevices";
+import {
+  getDatabaseBlueprintPlanMarker,
+} from "@/lib/supabase/blueprintPlanMarkers";
 import { theme } from "@/lib/constants/theme";
 
 type ManualDevicePageProps = {
@@ -64,6 +67,13 @@ export default async function ManualDevicePage({
 
   const projectId =
     project ?? device.projectId;
+
+  const blueprintMarker =
+  device.planMarkerId
+    ? await getDatabaseBlueprintPlanMarker(
+        device.planMarkerId,
+      )
+    : null;  
 
   const detailItems = [
     {
@@ -320,6 +330,68 @@ export default async function ManualDevicePage({
             )}
           </div>
         </section>
+
+        {blueprintMarker && (
+  <section
+    style={{
+      background: theme.colors.surface,
+      border: `1px solid ${theme.colors.border}`,
+      borderRadius: theme.radius.large,
+      padding: theme.spacing.lg,
+      marginBottom: theme.spacing.lg,
+    }}
+  >
+    <p
+      style={{
+        color: theme.colors.textLight,
+        fontSize: "0.72rem",
+        fontWeight: 800,
+        letterSpacing: "0.08em",
+        marginTop: 0,
+        marginBottom: theme.spacing.sm,
+      }}
+    >
+      BLUEPRINT LOCATION
+    </p>
+
+    <h2
+      style={{
+        color: theme.colors.primaryDark,
+        marginTop: 0,
+        marginBottom: theme.spacing.xs,
+      }}
+    >
+      {blueprintMarker.label ||
+        formatCategory(
+          blueprintMarker.markerType,
+        )}
+    </h2>
+
+    <p
+      style={{
+        color: theme.colors.textLight,
+        lineHeight: 1.6,
+        marginTop: 0,
+        marginBottom: theme.spacing.md,
+      }}
+    >
+      This device is linked to a marker
+      on the home Blueprint.
+    </p>
+
+    <Link
+    href={`/blueprint/plans/${blueprintMarker.planId}?marker=${blueprintMarker.id}`}
+      style={{
+        display: "inline-block",
+        color: theme.colors.primary,
+        fontWeight: 800,
+        textDecoration: "none",
+      }}
+    >
+      View on Blueprint →
+    </Link>
+  </section>
+)}
 
         <section
           style={{

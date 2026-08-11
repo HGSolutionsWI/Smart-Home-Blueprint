@@ -8,11 +8,27 @@ import {
   updateSmartManualDevice,
 } from "@/lib/supabase/smartManualDevices";
 
+import {
+  getDatabaseBlueprintProjectMarkers,
+} from "@/lib/supabase/blueprintPlanMarkers";
+
 import type {
   CreateSmartManualDeviceInput,
   DatabaseSmartManualDevice,
   UpdateSmartManualDeviceInput,
 } from "@/lib/supabase/smartManualDevices";
+
+import type {
+  DatabaseBlueprintPlanMarker,
+} from "@/lib/supabase/blueprintPlanMarkers";
+
+export async function getManualBlueprintMarkers(
+  projectId: string,
+): Promise<DatabaseBlueprintPlanMarker[]> {
+  return getDatabaseBlueprintProjectMarkers(
+    projectId,
+  );
+}
 
 export async function getManualDevices(
   projectId: string,

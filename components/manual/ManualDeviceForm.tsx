@@ -1,23 +1,25 @@
 "use client";
 
+import Link from "next/link";
 import {
+  useEffect,
   useState,
 } from "react";
-
-import Link from "next/link";
-
-import {
-  useRouter,
-} from "next/navigation";
+import { useRouter } from "next/navigation";
 
 import {
   createManualDevice,
+  getManualBlueprintMarkers,
   updateManualDevice,
 } from "@/app/manual/actions";
 
 import type {
-    DatabaseSmartManualDevice,
-    SmartManualDeviceCategory,
+  DatabaseBlueprintPlanMarker,
+} from "@/lib/supabase/blueprintPlanMarkers";
+
+import type {
+  DatabaseSmartManualDevice,
+  SmartManualDeviceCategory,
 } from "@/lib/supabase/smartManualDevices";
 
 import { theme } from "@/lib/constants/theme";
@@ -85,55 +87,175 @@ const categories: Array<{
   },
 ];
 
+function formatMarkerLabel(
+  marker: DatabaseBlueprintPlanMarker,
+) {
+  if (marker.label?.trim()) {
+    return marker.label;
+  }
+
+  return marker.markerType
+    .split("-")
+    .map(
+      (word) =>
+        word.charAt(0).toUpperCase() +
+        word.slice(1),
+    )
+    .join(" ");
+}
+
 export function ManualDeviceForm({
   projectId,
   device,
 }: ManualDeviceFormProps) {
   const router = useRouter();
 
-  const isEditing = Boolean(device);
+  const isEditing =
+    Boolean(device);
 
-  const [name, setName] = useState(
+  const [
+    name,
+    setName,
+  ] = useState(
     device?.name ?? "",
   );
 
-  const [category, setCategory] =
+  const [
+    category,
+    setCategory,
+  ] =
     useState<SmartManualDeviceCategory>(
       device?.category ?? "network",
     );
 
-  const [manufacturer, setManufacturer] =
-    useState(device?.manufacturer ?? "");
+  const [
+    manufacturer,
+    setManufacturer,
+  ] = useState(
+    device?.manufacturer ?? "",
+  );
 
-  const [model, setModel] =
-    useState(device?.model ?? "");
+  const [
+    model,
+    setModel,
+  ] = useState(
+    device?.model ?? "",
+  );
 
-  const [serialNumber, setSerialNumber] =
-    useState(device?.serialNumber ?? "");
+  const [
+    serialNumber,
+    setSerialNumber,
+  ] = useState(
+    device?.serialNumber ?? "",
+  );
 
-  const [location, setLocation] =
-    useState(device?.location ?? "");
+  const [
+    location,
+    setLocation,
+  ] = useState(
+    device?.location ?? "",
+  );
 
-  const [installedAt, setInstalledAt] =
-    useState(device?.installedAt ?? "");
+  const [
+    installedAt,
+    setInstalledAt,
+  ] = useState(
+    device?.installedAt ?? "",
+  );
 
-  const [manualUrl, setManualUrl] =
-    useState(device?.manualUrl ?? "");
+  const [
+    manualUrl,
+    setManualUrl,
+  ] = useState(
+    device?.manualUrl ?? "",
+  );
 
-  const [installGuideUrl, setInstallGuideUrl] =
-    useState(device?.installGuideUrl ?? "");
+  const [
+    installGuideUrl,
+    setInstallGuideUrl,
+  ] = useState(
+    device?.installGuideUrl ?? "",
+  );
 
-  const [warrantyUrl, setWarrantyUrl] =
-    useState(device?.warrantyUrl ?? "");
+  const [
+    warrantyUrl,
+    setWarrantyUrl,
+  ] = useState(
+    device?.warrantyUrl ?? "",
+  );
 
-  const [notes, setNotes] =
-    useState(device?.notes ?? "");
+  const [
+    notes,
+    setNotes,
+  ] = useState(
+    device?.notes ?? "",
+  );
 
-  const [isSaving, setIsSaving] =
-    useState(false);
+  const [
+    planMarkerId,
+    setPlanMarkerId,
+  ] = useState(
+    device?.planMarkerId ?? "",
+  );
 
-  const [errorMessage, setErrorMessage] =
-    useState<string | null>(null);
+  const [
+    blueprintMarkers,
+    setBlueprintMarkers,
+  ] = useState<
+    DatabaseBlueprintPlanMarker[]
+  >([]);
+
+  const [
+    isLoadingMarkers,
+    setIsLoadingMarkers,
+  ] = useState(true);
+
+  const [
+    markerLoadError,
+    setMarkerLoadError,
+  ] = useState<string | null>(
+    null,
+  );
+
+  const [
+    isSaving,
+    setIsSaving,
+  ] = useState(false);
+
+  const [
+    errorMessage,
+    setErrorMessage,
+  ] = useState<string | null>(
+    null,
+  );
+
+  useEffect(() => {
+    async function loadBlueprintMarkers() {
+      try {
+        setIsLoadingMarkers(true);
+        setMarkerLoadError(null);
+
+        const markers =
+          await getManualBlueprintMarkers(
+            projectId,
+          );
+
+        setBlueprintMarkers(
+          markers,
+        );
+      } catch (error) {
+        setMarkerLoadError(
+          error instanceof Error
+            ? error.message
+            : "Unable to load Blueprint markers.",
+        );
+      } finally {
+        setIsLoadingMarkers(false);
+      }
+    }
+
+    void loadBlueprintMarkers();
+  }, [projectId]);
 
   async function handleSubmit(
     event:
@@ -156,41 +278,61 @@ export function ManualDeviceForm({
       setIsSaving(true);
       setErrorMessage(null);
 
-      const savedDevice = isEditing && device
-  ? await updateManualDevice(
-      device.id,
-      {
-        name: trimmedName,
-        category,
-        manufacturer,
-        model,
-        serialNumber,
-        location,
-        installedAt,
-        manualUrl,
-        installGuideUrl,
-        warrantyUrl,
-        notes,
-      },
-    )
-  : await createManualDevice({
-      projectId,
-      name: trimmedName,
-      category,
-      manufacturer,
-      model,
-      serialNumber,
-      location,
-      installedAt,
-      manualUrl,
-      installGuideUrl,
-      warrantyUrl,
-      notes,
-    });
+      const savedDevice =
+        isEditing && device
+          ? await updateManualDevice(
+              device.id,
+              {
+                planMarkerId:
+                  planMarkerId ||
+                  null,
 
-router.push(
-  `/manual/device/${savedDevice.id}?project=${projectId}`,
-);
+                name:
+                  trimmedName,
+
+                category,
+
+                manufacturer,
+                model,
+
+                serialNumber,
+
+                location,
+                installedAt,
+
+                manualUrl,
+                installGuideUrl,
+                warrantyUrl,
+
+                notes,
+              },
+            )
+          : await createManualDevice({
+              projectId,
+
+              planMarkerId:
+                planMarkerId ||
+                undefined,
+
+              name:
+                trimmedName,
+
+              category,
+
+              manufacturer,
+              model,
+
+              serialNumber,
+
+              location,
+              installedAt,
+
+              manualUrl,
+              installGuideUrl,
+              warrantyUrl,
+
+              notes,
+            });
 
       router.push(
         `/manual/device/${savedDevice.id}?project=${projectId}`,
@@ -213,10 +355,13 @@ router.push(
       width: "100%",
       boxSizing: "border-box",
       border: `1px solid ${theme.colors.border}`,
-      borderRadius: theme.radius.medium,
+      borderRadius:
+        theme.radius.medium,
       padding: "11px 12px",
-      background: theme.colors.surface,
-      color: theme.colors.primaryDark,
+      background:
+        theme.colors.surface,
+      color:
+        theme.colors.primaryDark,
       font: "inherit",
     };
 
@@ -228,7 +373,8 @@ router.push(
 
   const labelTextStyle:
     React.CSSProperties = {
-      color: theme.colors.textLight,
+      color:
+        theme.colors.textLight,
       fontSize: "0.75rem",
       fontWeight: 800,
       letterSpacing: "0.04em",
@@ -244,17 +390,22 @@ router.push(
     >
       <section
         style={{
-          background: theme.colors.surface,
+          background:
+            theme.colors.surface,
           border: `1px solid ${theme.colors.border}`,
-          borderRadius: theme.radius.large,
-          padding: theme.spacing.lg,
+          borderRadius:
+            theme.radius.large,
+          padding:
+            theme.spacing.lg,
         }}
       >
         <h2
           style={{
-            color: theme.colors.primaryDark,
+            color:
+              theme.colors.primaryDark,
             marginTop: 0,
-            marginBottom: theme.spacing.xs,
+            marginBottom:
+              theme.spacing.xs,
           }}
         >
           Device
@@ -262,13 +413,18 @@ router.push(
 
         <p
           style={{
-            color: theme.colors.textLight,
+            color:
+              theme.colors.textLight,
             lineHeight: 1.6,
             marginTop: 0,
-            marginBottom: theme.spacing.lg,
+            marginBottom:
+              theme.spacing.lg,
           }}
         >
-          Identify what the device is and where it is installed.
+          Identify what the device is,
+          where it is installed, and
+          optionally connect it to the
+          matching Blueprint marker.
         </p>
 
         <div
@@ -277,8 +433,14 @@ router.push(
             gap: theme.spacing.md,
           }}
         >
-          <label style={labelStyle}>
-            <span style={labelTextStyle}>
+          <label
+            style={labelStyle}
+          >
+            <span
+              style={
+                labelTextStyle
+              }
+            >
               DEVICE NAME *
             </span>
 
@@ -295,8 +457,14 @@ router.push(
             />
           </label>
 
-          <label style={labelStyle}>
-            <span style={labelTextStyle}>
+          <label
+            style={labelStyle}
+          >
+            <span
+              style={
+                labelTextStyle
+              }
+            >
               CATEGORY
             </span>
 
@@ -313,18 +481,30 @@ router.push(
               {categories.map(
                 (option) => (
                   <option
-                    key={option.value}
-                    value={option.value}
+                    key={
+                      option.value
+                    }
+                    value={
+                      option.value
+                    }
                   >
-                    {option.label}
+                    {
+                      option.label
+                    }
                   </option>
                 ),
               )}
             </select>
           </label>
 
-          <label style={labelStyle}>
-            <span style={labelTextStyle}>
+          <label
+            style={labelStyle}
+          >
+            <span
+              style={
+                labelTextStyle
+              }
+            >
               LOCATION
             </span>
 
@@ -339,22 +519,106 @@ router.push(
               style={inputStyle}
             />
           </label>
+
+          <label
+            style={labelStyle}
+          >
+            <span
+              style={
+                labelTextStyle
+              }
+            >
+              BLUEPRINT LOCATION
+            </span>
+
+            <select
+              value={planMarkerId}
+              onChange={(event) =>
+                setPlanMarkerId(
+                  event.target.value,
+                )
+              }
+              disabled={
+                isLoadingMarkers
+              }
+              style={{
+                ...inputStyle,
+
+                opacity:
+                  isLoadingMarkers
+                    ? 0.6
+                    : 1,
+
+                cursor:
+                  isLoadingMarkers
+                    ? "wait"
+                    : "pointer",
+              }}
+            >
+              <option value="">
+                {isLoadingMarkers
+                  ? "Loading Blueprint markers..."
+                  : "Not linked to a Blueprint marker"}
+              </option>
+
+              {blueprintMarkers.map(
+                (marker) => (
+                  <option
+                    key={
+                      marker.id
+                    }
+                    value={
+                      marker.id
+                    }
+                  >
+                    {formatMarkerLabel(
+                      marker,
+                    )}
+                  </option>
+                ),
+              )}
+            </select>
+
+            {markerLoadError && (
+              <span
+                style={{
+                  color:
+                    theme.colors.warning,
+
+                  fontSize:
+                    "0.8rem",
+
+                  lineHeight: 1.5,
+                }}
+              >
+                Blueprint markers could
+                not be loaded. You can
+                still save this device
+                without linking it.
+              </span>
+            )}
+          </label>
         </div>
       </section>
 
       <section
         style={{
-          background: theme.colors.surface,
+          background:
+            theme.colors.surface,
           border: `1px solid ${theme.colors.border}`,
-          borderRadius: theme.radius.large,
-          padding: theme.spacing.lg,
+          borderRadius:
+            theme.radius.large,
+          padding:
+            theme.spacing.lg,
         }}
       >
         <h2
           style={{
-            color: theme.colors.primaryDark,
+            color:
+              theme.colors.primaryDark,
             marginTop: 0,
-            marginBottom: theme.spacing.xs,
+            marginBottom:
+              theme.spacing.xs,
           }}
         >
           Product Information
@@ -362,13 +626,16 @@ router.push(
 
         <p
           style={{
-            color: theme.colors.textLight,
+            color:
+              theme.colors.textLight,
             lineHeight: 1.6,
             marginTop: 0,
-            marginBottom: theme.spacing.lg,
+            marginBottom:
+              theme.spacing.lg,
           }}
         >
-          Record enough information to identify the exact product
+          Record enough information to
+          identify the exact product
           years from now.
         </p>
 
@@ -380,13 +647,21 @@ router.push(
             gap: theme.spacing.md,
           }}
         >
-          <label style={labelStyle}>
-            <span style={labelTextStyle}>
+          <label
+            style={labelStyle}
+          >
+            <span
+              style={
+                labelTextStyle
+              }
+            >
               MANUFACTURER
             </span>
 
             <input
-              value={manufacturer}
+              value={
+                manufacturer
+              }
               onChange={(event) =>
                 setManufacturer(
                   event.target.value,
@@ -397,8 +672,14 @@ router.push(
             />
           </label>
 
-          <label style={labelStyle}>
-            <span style={labelTextStyle}>
+          <label
+            style={labelStyle}
+          >
+            <span
+              style={
+                labelTextStyle
+              }
+            >
               MODEL
             </span>
 
@@ -414,13 +695,21 @@ router.push(
             />
           </label>
 
-          <label style={labelStyle}>
-            <span style={labelTextStyle}>
+          <label
+            style={labelStyle}
+          >
+            <span
+              style={
+                labelTextStyle
+              }
+            >
               SERIAL NUMBER
             </span>
 
             <input
-              value={serialNumber}
+              value={
+                serialNumber
+              }
               onChange={(event) =>
                 setSerialNumber(
                   event.target.value,
@@ -431,14 +720,22 @@ router.push(
             />
           </label>
 
-          <label style={labelStyle}>
-            <span style={labelTextStyle}>
+          <label
+            style={labelStyle}
+          >
+            <span
+              style={
+                labelTextStyle
+              }
+            >
               INSTALL DATE
             </span>
 
             <input
               type="date"
-              value={installedAt}
+              value={
+                installedAt
+              }
               onChange={(event) =>
                 setInstalledAt(
                   event.target.value,
@@ -452,17 +749,22 @@ router.push(
 
       <section
         style={{
-          background: theme.colors.surface,
+          background:
+            theme.colors.surface,
           border: `1px solid ${theme.colors.border}`,
-          borderRadius: theme.radius.large,
-          padding: theme.spacing.lg,
+          borderRadius:
+            theme.radius.large,
+          padding:
+            theme.spacing.lg,
         }}
       >
         <h2
           style={{
-            color: theme.colors.primaryDark,
+            color:
+              theme.colors.primaryDark,
             marginTop: 0,
-            marginBottom: theme.spacing.xs,
+            marginBottom:
+              theme.spacing.xs,
           }}
         >
           Documentation
@@ -470,14 +772,18 @@ router.push(
 
         <p
           style={{
-            color: theme.colors.textLight,
+            color:
+              theme.colors.textLight,
             lineHeight: 1.6,
             marginTop: 0,
-            marginBottom: theme.spacing.lg,
+            marginBottom:
+              theme.spacing.lg,
           }}
         >
-          URLs are enough for v1. File uploads and automatic manual
-          discovery can come later.
+          Add documentation links now.
+          Automatic manual discovery and
+          file uploads can be layered on
+          later.
         </p>
 
         <div
@@ -486,8 +792,14 @@ router.push(
             gap: theme.spacing.md,
           }}
         >
-          <label style={labelStyle}>
-            <span style={labelTextStyle}>
+          <label
+            style={labelStyle}
+          >
+            <span
+              style={
+                labelTextStyle
+              }
+            >
               OWNER / USER MANUAL URL
             </span>
 
@@ -504,14 +816,22 @@ router.push(
             />
           </label>
 
-          <label style={labelStyle}>
-            <span style={labelTextStyle}>
+          <label
+            style={labelStyle}
+          >
+            <span
+              style={
+                labelTextStyle
+              }
+            >
               INSTALLATION GUIDE URL
             </span>
 
             <input
               type="url"
-              value={installGuideUrl}
+              value={
+                installGuideUrl
+              }
               onChange={(event) =>
                 setInstallGuideUrl(
                   event.target.value,
@@ -522,14 +842,22 @@ router.push(
             />
           </label>
 
-          <label style={labelStyle}>
-            <span style={labelTextStyle}>
+          <label
+            style={labelStyle}
+          >
+            <span
+              style={
+                labelTextStyle
+              }
+            >
               WARRANTY URL
             </span>
 
             <input
               type="url"
-              value={warrantyUrl}
+              value={
+                warrantyUrl
+              }
               onChange={(event) =>
                 setWarrantyUrl(
                   event.target.value,
@@ -544,14 +872,23 @@ router.push(
 
       <section
         style={{
-          background: theme.colors.surface,
+          background:
+            theme.colors.surface,
           border: `1px solid ${theme.colors.border}`,
-          borderRadius: theme.radius.large,
-          padding: theme.spacing.lg,
+          borderRadius:
+            theme.radius.large,
+          padding:
+            theme.spacing.lg,
         }}
       >
-        <label style={labelStyle}>
-          <span style={labelTextStyle}>
+        <label
+          style={labelStyle}
+        >
+          <span
+            style={
+              labelTextStyle
+            }
+          >
             NOTES
           </span>
 
@@ -576,10 +913,13 @@ router.push(
         <div
           role="alert"
           style={{
-            border: "1px solid #DC2626",
-            borderRadius: theme.radius.medium,
+            border:
+              "1px solid #DC2626",
+            borderRadius:
+              theme.radius.medium,
             background: "#FEF2F2",
-            padding: theme.spacing.md,
+            padding:
+              theme.spacing.md,
             color: "#991B1B",
             fontWeight: 700,
           }}
@@ -604,8 +944,10 @@ router.push(
           }
           style={{
             border: "none",
-            borderRadius: theme.radius.medium,
-            background: theme.colors.primary,
+            borderRadius:
+              theme.radius.medium,
+            background:
+              theme.colors.primary,
             color: "#FFFFFF",
             padding: "12px 18px",
             fontWeight: 800,
@@ -622,20 +964,21 @@ router.push(
           }}
         >
           {isSaving
-  ? "Saving..."
-  : isEditing
-    ? "Save Changes"
-    : "Add Device"}
+            ? "Saving..."
+            : isEditing
+              ? "Save Changes"
+              : "Add Device"}
         </button>
 
         <Link
-  href={
-    isEditing && device
-      ? `/manual/device/${device.id}?project=${projectId}`
-      : `/manual?project=${projectId}`
-  }
+          href={
+            isEditing && device
+              ? `/manual/device/${device.id}?project=${projectId}`
+              : `/manual?project=${projectId}`
+          }
           style={{
-            color: theme.colors.textLight,
+            color:
+              theme.colors.textLight,
             fontWeight: 700,
             textDecoration: "none",
             padding: "12px 4px",

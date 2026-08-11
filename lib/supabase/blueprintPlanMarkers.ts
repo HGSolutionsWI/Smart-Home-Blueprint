@@ -213,6 +213,43 @@ export async function getDatabaseBlueprintPlanMarkers(
   );
 }
 
+export async function getDatabaseBlueprintProjectMarkers(
+  projectId: string,
+): Promise<DatabaseBlueprintPlanMarker[]> {
+  const supabase =
+    await createClient();
+
+  const userId =
+    await getAuthenticatedUserId();
+
+  const { data, error } =
+    await supabase
+      .from("blueprint_plan_markers")
+      .select("*")
+      .eq("project_id", projectId)
+      .eq("owner_id", userId)
+      .neq(
+        "marker_type",
+        "conduit-pathway",
+      )
+      .order("created_at", {
+        ascending: true,
+      });
+
+  if (error) {
+    throw new Error(
+      error.message,
+    );
+  }
+
+  return (data ?? []).map(
+    (row) =>
+      mapRowToMarker(
+        row as BlueprintPlanMarkerRow,
+      ),
+  );
+}
+
 export async function getDatabaseBlueprintPlanMarker(
   markerId: string,
 ): Promise<DatabaseBlueprintPlanMarker | null> {
