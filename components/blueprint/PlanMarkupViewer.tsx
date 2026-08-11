@@ -207,6 +207,35 @@ export function PlanMarkupViewer({
   const [message, setMessage] =
     useState<string | null>(null);
 
+  const [zoom, setZoom] =
+  useState(1);
+
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 3;
+const ZOOM_STEP = 0.25;
+
+function zoomIn() {
+  setZoom((currentZoom) =>
+    Math.min(
+      currentZoom + ZOOM_STEP,
+      MAX_ZOOM,
+    ),
+  );
+}
+
+function zoomOut() {
+  setZoom((currentZoom) =>
+    Math.max(
+      currentZoom - ZOOM_STEP,
+      MIN_ZOOM,
+    ),
+  );
+}
+
+function resetZoom() {
+  setZoom(1);
+}  
+
   const selectedMarker =
     markers.find(
       (marker) =>
@@ -980,6 +1009,123 @@ export function PlanMarkupViewer({
         </div>
       )}
 
+      <section
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: theme.spacing.md,
+    flexWrap: "wrap",
+
+    background: theme.colors.surface,
+    border: `1px solid ${theme.colors.border}`,
+    borderRadius: theme.radius.large,
+    padding: theme.spacing.sm,
+  }}
+>
+  <div
+    style={{
+      display: "flex",
+      alignItems: "center",
+      gap: theme.spacing.sm,
+      flexWrap: "wrap",
+    }}
+  >
+    <button
+      type="button"
+      onClick={zoomOut}
+      disabled={zoom <= MIN_ZOOM}
+      style={{
+        border: `1px solid ${theme.colors.border}`,
+        borderRadius: theme.radius.medium,
+        background: theme.colors.surface,
+        color: theme.colors.primaryDark,
+        padding: "8px 12px",
+        fontWeight: 800,
+        cursor:
+          zoom <= MIN_ZOOM
+            ? "not-allowed"
+            : "pointer",
+        opacity:
+          zoom <= MIN_ZOOM
+            ? 0.5
+            : 1,
+      }}
+    >
+      −
+    </button>
+
+    <span
+      style={{
+        minWidth: "58px",
+        textAlign: "center",
+        color: theme.colors.primaryDark,
+        fontWeight: 800,
+      }}
+    >
+      {Math.round(zoom * 100)}%
+    </span>
+
+    <button
+      type="button"
+      onClick={zoomIn}
+      disabled={zoom >= MAX_ZOOM}
+      style={{
+        border: `1px solid ${theme.colors.border}`,
+        borderRadius: theme.radius.medium,
+        background: theme.colors.surface,
+        color: theme.colors.primaryDark,
+        padding: "8px 12px",
+        fontWeight: 800,
+        cursor:
+          zoom >= MAX_ZOOM
+            ? "not-allowed"
+            : "pointer",
+        opacity:
+          zoom >= MAX_ZOOM
+            ? 0.5
+            : 1,
+      }}
+    >
+      +
+    </button>
+
+    <button
+      type="button"
+      onClick={resetZoom}
+      disabled={zoom === 1}
+      style={{
+        border: `1px solid ${theme.colors.border}`,
+        borderRadius: theme.radius.medium,
+        background: theme.colors.surface,
+        color: theme.colors.primaryDark,
+        padding: "8px 12px",
+        fontWeight: 700,
+        cursor:
+          zoom === 1
+            ? "not-allowed"
+            : "pointer",
+        opacity:
+          zoom === 1
+            ? 0.5
+            : 1,
+      }}
+    >
+      Reset
+    </button>
+  </div>
+
+  <span
+    style={{
+      color: theme.colors.textLight,
+      fontSize: "0.8rem",
+      fontWeight: 700,
+    }}
+  >
+    Zoom to inspect and mark detailed areas
+  </span>
+</section>
+      
       <div
         style={{
           background: "#E2E8F0",
@@ -994,13 +1140,16 @@ export function PlanMarkupViewer({
           ref={imageContainerRef}
           onClick={handlePlanClick}
           style={{
-            position: "relative",
-            display: "inline-block",
-            minWidth: "100%",
-            cursor: isSaving
-              ? "wait"
-              : "crosshair",
-          }}
+  position: "relative",
+  display: "inline-block",
+
+  width: `${zoom * 100}%`,
+  minWidth: `${zoom * 100}%`,
+
+  cursor: isSaving
+    ? "wait"
+    : "crosshair",
+}}
         >
           <img
             src={imageUrl}

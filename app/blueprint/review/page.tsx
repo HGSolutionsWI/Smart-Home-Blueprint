@@ -40,11 +40,14 @@ export default function BlueprintReviewPage() {
   }
 
   function reviewSession(
-    sessionId: (typeof blueprintSessions)[number]["id"],
-  ) {
-    goToSession(sessionId);
-    router.push("/blueprint");
-  }
+  sessionId: (typeof blueprintSessions)[number]["id"],
+) {
+  goToSession(sessionId);
+
+  router.push(
+    `/blueprint?review=1&session=${sessionId}`,
+  );
+}
 
   if (!hasLoadedStorage) {
     return (

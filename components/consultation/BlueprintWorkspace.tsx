@@ -1,5 +1,8 @@
 "use client";
-import { useRouter } from "next/navigation";
+import {
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 import { QuestionRenderer } from "@/components/consultation/QuestionRenderer";
 import { Card } from "@/components/ui/Card/card";
 import { PrimaryButton } from "@/components/ui/Button/PrimaryButton";
@@ -16,7 +19,10 @@ import {
 
 export function BlueprintWorkspace() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
+  const isReviewMode =
+  searchParams.get("review") === "1";
   const {
     answers,
     sessionIndex,
@@ -42,32 +48,68 @@ async function handleContinue() {
     return;
   }
 
-  if (isFinalQuestion) {
-  const completedProject =
-    markBlueprintComplete();
+  /*
+   * In review mode, finishing the selected session
+   * updates the completed Blueprint and returns
+   * directly to the results page.
+   */
+  if (
+    isReviewMode &&
+    safeQuestionIndex ===
+      visibleQuestions.length - 1
+  ) {
+    const completedProject =
+      markBlueprintComplete();
 
-  if (completedProject) {
-    try {
-      await createBlueprintInAccount(
-        completedProject,
+    if (completedProject) {
+      try {
+        await createBlueprintInAccount(
+          completedProject,
+        );
+      } catch (error) {
+        console.error(
+          "Failed to sync updated Blueprint:",
+          error,
+        );
+      }
+
+      router.push(
+        `/blueprint/results?project=${completedProject.id}`,
       );
-    } catch (error) {
-      console.error(
-        "Failed to sync completed Blueprint:",
-        error,
-      );
+
+      return;
     }
 
-    router.push(
-      `/blueprint/results?project=${completedProject.id}`,
-    );
-
+    router.push("/blueprint/results");
     return;
   }
 
-  router.push("/blueprint/results");
-  return;
-}
+  if (isFinalQuestion) {
+    const completedProject =
+      markBlueprintComplete();
+
+    if (completedProject) {
+      try {
+        await createBlueprintInAccount(
+          completedProject,
+        );
+      } catch (error) {
+        console.error(
+          "Failed to sync completed Blueprint:",
+          error,
+        );
+      }
+
+      router.push(
+        `/blueprint/results?project=${completedProject.id}`,
+      );
+
+      return;
+    }
+
+    router.push("/blueprint/results");
+    return;
+  }
 
   nextQuestion();
 }
@@ -91,11 +133,13 @@ async function handleContinue() {
     safeQuestionIndex === visibleQuestions.length - 1;
 
   const continueLabel =
-  isLastSession && isLastQuestion
-    ? "Build My Blueprint"
-    : isLastQuestion
-      ? "Continue to Next Session"
-      : "Continue";
+  isReviewMode && isLastQuestion
+    ? "Save Changes & Update Blueprint"
+    : isLastSession && isLastQuestion
+      ? "Build My Blueprint"
+      : isLastQuestion
+        ? "Continue to Next Session"
+        : "Continue";
 
   return (
     <main
@@ -392,7 +436,29 @@ async function handleContinue() {
                 flexWrap: "wrap",
               }}
             >
-              {!isFirstQuestion && (
+              {isReviewMode && (
+  <button
+    type="button"
+    onClick={() =>
+      router.push("/blueprint/review")
+    }
+    style={{
+      background: theme.colors.surface,
+      color: theme.colors.primaryDark,
+      border: `1px solid ${theme.colors.border}`,
+      borderRadius: theme.radius.medium,
+      padding: `${theme.spacing.md} 30px`,
+      minHeight: "48px",
+      fontWeight: 700,
+      cursor: "pointer",
+    }}
+  >
+    Exit Review
+  </button>
+)}
+              
+              {!isFirstQuestion &&
+                (!isReviewMode || safeQuestionIndex > 0) && (
                 <button
                   type="button"
                   onClick={previousQuestion}
