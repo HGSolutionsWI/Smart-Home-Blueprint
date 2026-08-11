@@ -39,7 +39,12 @@ export type DatabaseSmartManualDevice = {
   installGuideUrl?: string;
   warrantyUrl?: string;
 
+  manufacturerWebsite?: string;
+  supportWebsite?: string;
+  supportPhone?: string;
+
   installedAt?: string;
+  warrantyExpiresAt?: string;
 
   createdAt: string;
   updatedAt: string;
@@ -69,7 +74,12 @@ type SmartManualDeviceRow = {
   install_guide_url: string | null;
   warranty_url: string | null;
 
+  manufacturer_website: string | null;
+  support_website: string | null;
+  support_phone: string | null;
+
   installed_at: string | null;
+  warranty_expires_at: string | null;
 
   created_at: string;
   updated_at: string;
@@ -96,7 +106,12 @@ export type CreateSmartManualDeviceInput = {
   installGuideUrl?: string;
   warrantyUrl?: string;
 
+  manufacturerWebsite?: string;
+  supportWebsite?: string;
+  supportPhone?: string;
+
   installedAt?: string;
+  warrantyExpiresAt?: string;
 };
 
 export type UpdateSmartManualDeviceInput = {
@@ -118,7 +133,12 @@ export type UpdateSmartManualDeviceInput = {
   installGuideUrl?: string | null;
   warrantyUrl?: string | null;
 
+  manufacturerWebsite?: string | null;
+  supportWebsite?: string | null;
+  supportPhone?: string | null;
+
   installedAt?: string | null;
+  warrantyExpiresAt?: string | null;
 };
 
 function mapRowToDevice(
@@ -156,8 +176,23 @@ function mapRowToDevice(
     warrantyUrl:
       row.warranty_url ?? undefined,
 
+    manufacturerWebsite:
+      row.manufacturer_website ??
+      undefined,
+
+    supportWebsite:
+      row.support_website ??
+      undefined,
+
+    supportPhone:
+      row.support_phone ?? undefined,
+
     installedAt:
       row.installed_at ?? undefined,
+
+    warrantyExpiresAt:
+      row.warranty_expires_at ??
+      undefined,
 
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -344,8 +379,24 @@ export async function createSmartManualDevice(
           input.warrantyUrl?.trim() ||
           null,
 
+        manufacturer_website:
+          input.manufacturerWebsite?.trim() ||
+          null,
+
+        support_website:
+          input.supportWebsite?.trim() ||
+          null,
+
+        support_phone:
+          input.supportPhone?.trim() ||
+          null,
+
         installed_at:
           input.installedAt ||
+          null,
+
+        warranty_expires_at:
+          input.warrantyExpiresAt ||
           null,
       })
       .select("*")
@@ -475,11 +526,47 @@ export async function updateSmartManualDevice(
   }
 
   if (
+    updates.manufacturerWebsite !==
+    undefined
+  ) {
+    updatePayload.manufacturer_website =
+      updates.manufacturerWebsite?.trim() ||
+      null;
+  }
+
+  if (
+    updates.supportWebsite !==
+    undefined
+  ) {
+    updatePayload.support_website =
+      updates.supportWebsite?.trim() ||
+      null;
+  }
+
+  if (
+    updates.supportPhone !==
+    undefined
+  ) {
+    updatePayload.support_phone =
+      updates.supportPhone?.trim() ||
+      null;
+  }
+
+  if (
     updates.installedAt !==
     undefined
   ) {
     updatePayload.installed_at =
       updates.installedAt ||
+      null;
+  }
+
+  if (
+    updates.warrantyExpiresAt !==
+    undefined
+  ) {
+    updatePayload.warranty_expires_at =
+      updates.warrantyExpiresAt ||
       null;
   }
 

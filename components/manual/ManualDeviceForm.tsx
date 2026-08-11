@@ -151,20 +151,23 @@ export function ManualDeviceForm({
     Boolean(device);
 
   const [
-  name,
-  setName,
-] = useState(
-  device?.name ??
-    initialBlueprintMarker?.label ??
-    "",
-);
+    name,
+    setName,
+  ] = useState(
+    device?.name ??
+      initialBlueprintMarker?.label ??
+      "",
+  );
 
   const [
     category,
     setCategory,
   ] =
     useState<SmartManualDeviceCategory>(
-      device?.category ?? getManualCategoryFromMarker(initialBlueprintMarker),
+      device?.category ??
+        getManualCategoryFromMarker(
+          initialBlueprintMarker,
+        ),
     );
 
   const [
@@ -224,6 +227,34 @@ export function ManualDeviceForm({
   );
 
   const [
+    manufacturerWebsite,
+    setManufacturerWebsite,
+  ] = useState(
+    device?.manufacturerWebsite ?? "",
+  );
+
+  const [
+    supportWebsite,
+    setSupportWebsite,
+  ] = useState(
+    device?.supportWebsite ?? "",
+  );
+
+  const [
+    supportPhone,
+    setSupportPhone,
+  ] = useState(
+    device?.supportPhone ?? "",
+  );
+
+  const [
+    warrantyExpiresAt,
+    setWarrantyExpiresAt,
+  ] = useState(
+    device?.warrantyExpiresAt ?? "",
+  );
+
+  const [
     notes,
     setNotes,
   ] = useState(
@@ -231,24 +262,24 @@ export function ManualDeviceForm({
   );
 
   const [
-  planMarkerId,
-  setPlanMarkerId,
-] = useState(
-  device?.planMarkerId ??
-    initialBlueprintMarker?.id ??
-    "",
-);
+    planMarkerId,
+    setPlanMarkerId,
+  ] = useState(
+    device?.planMarkerId ??
+      initialBlueprintMarker?.id ??
+      "",
+  );
 
   const [
-  blueprintMarkers,
-  setBlueprintMarkers,
-] = useState<
-  DatabaseBlueprintPlanMarker[]
->(
-  initialBlueprintMarker
-    ? [initialBlueprintMarker]
-    : [],
-);
+    blueprintMarkers,
+    setBlueprintMarkers,
+  ] = useState<
+    DatabaseBlueprintPlanMarker[]
+  >(
+    initialBlueprintMarker
+      ? [initialBlueprintMarker]
+      : [],
+  );
 
   const [
     isLoadingMarkers,
@@ -275,79 +306,79 @@ export function ManualDeviceForm({
   );
 
   useEffect(() => {
-  async function loadBlueprintMarkers() {
-    try {
-      setIsLoadingMarkers(true);
-      setMarkerLoadError(null);
+    async function loadBlueprintMarkers() {
+      try {
+        setIsLoadingMarkers(true);
+        setMarkerLoadError(null);
 
-      const markers =
-        await getManualBlueprintMarkers(
-          projectId,
-        );
-
-      setBlueprintMarkers(() => {
-        if (!initialBlueprintMarker) {
-          return markers;
-        }
-
-        const markerAlreadyIncluded =
-          markers.some(
-            (marker) =>
-              marker.id ===
-              initialBlueprintMarker.id,
+        const markers =
+          await getManualBlueprintMarkers(
+            projectId,
           );
 
-        if (markerAlreadyIncluded) {
-          return markers;
-        }
+        setBlueprintMarkers(() => {
+          if (!initialBlueprintMarker) {
+            return markers;
+          }
 
-        return [
-          initialBlueprintMarker,
-          ...markers,
-        ];
-      });
-    } catch (error) {
-      setMarkerLoadError(
-        error instanceof Error
-          ? error.message
-          : "Unable to load Blueprint markers.",
-      );
-    } finally {
-      setIsLoadingMarkers(false);
+          const markerAlreadyIncluded =
+            markers.some(
+              (marker) =>
+                marker.id ===
+                initialBlueprintMarker.id,
+            );
+
+          if (markerAlreadyIncluded) {
+            return markers;
+          }
+
+          return [
+            initialBlueprintMarker,
+            ...markers,
+          ];
+        });
+      } catch (error) {
+        setMarkerLoadError(
+          error instanceof Error
+            ? error.message
+            : "Unable to load Blueprint markers.",
+        );
+      } finally {
+        setIsLoadingMarkers(false);
+      }
     }
-  }
 
-  void loadBlueprintMarkers();
-}, [
-  projectId,
-  initialBlueprintMarker,
-]);
+    void loadBlueprintMarkers();
+  }, [
+    projectId,
+    initialBlueprintMarker,
+  ]);
 
-useEffect(() => {
-  if (
-    !device &&
-    initialBlueprintMarker
-  ) {
-    setPlanMarkerId(
-      initialBlueprintMarker.id,
-    );
+  useEffect(() => {
+    if (
+      !device &&
+      initialBlueprintMarker
+    ) {
+      setPlanMarkerId(
+        initialBlueprintMarker.id,
+      );
 
-    setName((currentName) =>
-      currentName ||
-      initialBlueprintMarker.label ||
-      "",
-    );
+      setName((currentName) =>
+        currentName ||
+        initialBlueprintMarker.label ||
+        "",
+      );
 
-    setCategory(
-      getManualCategoryFromMarker(
-        initialBlueprintMarker,
-      ),
-    );
-  }
-}, [
-  device,
-  initialBlueprintMarker,
-]);
+      setCategory(
+        getManualCategoryFromMarker(
+          initialBlueprintMarker,
+        ),
+      );
+    }
+  }, [
+    device,
+    initialBlueprintMarker,
+  ]);
 
   async function handleSubmit(
     event:
@@ -370,6 +401,29 @@ useEffect(() => {
       setIsSaving(true);
       setErrorMessage(null);
 
+      const commonFields = {
+        name: trimmedName,
+        category,
+
+        manufacturer,
+        model,
+        serialNumber,
+
+        location,
+        installedAt,
+
+        manualUrl,
+        installGuideUrl,
+        warrantyUrl,
+
+        manufacturerWebsite,
+        supportWebsite,
+        supportPhone,
+        warrantyExpiresAt,
+
+        notes,
+      };
+
       const savedDevice =
         isEditing && device
           ? await updateManualDevice(
@@ -379,24 +433,7 @@ useEffect(() => {
                   planMarkerId ||
                   null,
 
-                name:
-                  trimmedName,
-
-                category,
-
-                manufacturer,
-                model,
-
-                serialNumber,
-
-                location,
-                installedAt,
-
-                manualUrl,
-                installGuideUrl,
-                warrantyUrl,
-
-                notes,
+                ...commonFields,
               },
             )
           : await createManualDevice({
@@ -406,24 +443,7 @@ useEffect(() => {
                 planMarkerId ||
                 undefined,
 
-              name:
-                trimmedName,
-
-              category,
-
-              manufacturer,
-              model,
-
-              serialNumber,
-
-              location,
-              installedAt,
-
-              manualUrl,
-              installGuideUrl,
-              warrantyUrl,
-
-              notes,
+              ...commonFields,
             });
 
       router.push(
@@ -472,6 +492,27 @@ useEffect(() => {
       letterSpacing: "0.04em",
     };
 
+  const sectionStyle:
+    React.CSSProperties = {
+      background:
+        theme.colors.surface,
+      border: `1px solid ${theme.colors.border}`,
+      borderRadius:
+        theme.radius.large,
+      padding:
+        theme.spacing.lg,
+    };
+
+  const sectionDescriptionStyle:
+    React.CSSProperties = {
+      color:
+        theme.colors.textLight,
+      lineHeight: 1.6,
+      marginTop: 0,
+      marginBottom:
+        theme.spacing.lg,
+    };
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -480,16 +521,9 @@ useEffect(() => {
         gap: theme.spacing.lg,
       }}
     >
+      {/* DEVICE */}
       <section
-        style={{
-          background:
-            theme.colors.surface,
-          border: `1px solid ${theme.colors.border}`,
-          borderRadius:
-            theme.radius.large,
-          padding:
-            theme.spacing.lg,
-        }}
+        style={sectionStyle}
       >
         <h2
           style={{
@@ -504,14 +538,9 @@ useEffect(() => {
         </h2>
 
         <p
-          style={{
-            color:
-              theme.colors.textLight,
-            lineHeight: 1.6,
-            marginTop: 0,
-            marginBottom:
-              theme.spacing.lg,
-          }}
+          style={
+            sectionDescriptionStyle
+          }
         >
           Identify what the device is,
           where it is installed, and
@@ -624,38 +653,38 @@ useEffect(() => {
             </span>
 
             <select
-  value={planMarkerId}
-  onChange={(event) =>
-    setPlanMarkerId(
-      event.target.value,
-    )
-  }
-  disabled={
-    isLoadingMarkers &&
-    !initialBlueprintMarker
-  }
-  style={{
-    ...inputStyle,
+              value={planMarkerId}
+              onChange={(event) =>
+                setPlanMarkerId(
+                  event.target.value,
+                )
+              }
+              disabled={
+                isLoadingMarkers &&
+                !initialBlueprintMarker
+              }
+              style={{
+                ...inputStyle,
 
-    opacity:
-      isLoadingMarkers &&
-      !initialBlueprintMarker
-        ? 0.6
-        : 1,
+                opacity:
+                  isLoadingMarkers &&
+                  !initialBlueprintMarker
+                    ? 0.6
+                    : 1,
 
-    cursor:
-      isLoadingMarkers &&
-      !initialBlueprintMarker
-        ? "wait"
-        : "pointer",
-  }}
->
+                cursor:
+                  isLoadingMarkers &&
+                  !initialBlueprintMarker
+                    ? "wait"
+                    : "pointer",
+              }}
+            >
               <option value="">
-  {isLoadingMarkers &&
-  !initialBlueprintMarker
-    ? "Loading Blueprint markers..."
-    : "Not linked to a Blueprint marker"}
-</option>
+                {isLoadingMarkers &&
+                !initialBlueprintMarker
+                  ? "Loading Blueprint markers..."
+                  : "Not linked to a Blueprint marker"}
+              </option>
 
               {blueprintMarkers.map(
                 (marker) => (
@@ -680,10 +709,8 @@ useEffect(() => {
                 style={{
                   color:
                     theme.colors.warning,
-
                   fontSize:
                     "0.8rem",
-
                   lineHeight: 1.5,
                 }}
               >
@@ -697,16 +724,9 @@ useEffect(() => {
         </div>
       </section>
 
+      {/* PRODUCT INFORMATION */}
       <section
-        style={{
-          background:
-            theme.colors.surface,
-          border: `1px solid ${theme.colors.border}`,
-          borderRadius:
-            theme.radius.large,
-          padding:
-            theme.spacing.lg,
-        }}
+        style={sectionStyle}
       >
         <h2
           style={{
@@ -721,14 +741,9 @@ useEffect(() => {
         </h2>
 
         <p
-          style={{
-            color:
-              theme.colors.textLight,
-            lineHeight: 1.6,
-            marginTop: 0,
-            marginBottom:
-              theme.spacing.lg,
-          }}
+          style={
+            sectionDescriptionStyle
+          }
         >
           Record enough information to
           identify the exact product
@@ -843,16 +858,9 @@ useEffect(() => {
         </div>
       </section>
 
+      {/* DOCUMENTATION */}
       <section
-        style={{
-          background:
-            theme.colors.surface,
-          border: `1px solid ${theme.colors.border}`,
-          borderRadius:
-            theme.radius.large,
-          padding:
-            theme.spacing.lg,
-        }}
+        style={sectionStyle}
       >
         <h2
           style={{
@@ -867,19 +875,13 @@ useEffect(() => {
         </h2>
 
         <p
-          style={{
-            color:
-              theme.colors.textLight,
-            lineHeight: 1.6,
-            marginTop: 0,
-            marginBottom:
-              theme.spacing.lg,
-          }}
+          style={
+            sectionDescriptionStyle
+          }
         >
-          Add documentation links now.
-          Automatic manual discovery and
-          file uploads can be layered on
-          later.
+          Add direct links to the
+          documentation that should stay
+          with this device.
         </p>
 
         <div
@@ -966,16 +968,150 @@ useEffect(() => {
         </div>
       </section>
 
+      {/* SUPPORT INFORMATION */}
       <section
-        style={{
-          background:
-            theme.colors.surface,
-          border: `1px solid ${theme.colors.border}`,
-          borderRadius:
-            theme.radius.large,
-          padding:
-            theme.spacing.lg,
-        }}
+        style={sectionStyle}
+      >
+        <h2
+          style={{
+            color:
+              theme.colors.primaryDark,
+            marginTop: 0,
+            marginBottom:
+              theme.spacing.xs,
+          }}
+        >
+          Support Information
+        </h2>
+
+        <p
+          style={
+            sectionDescriptionStyle
+          }
+        >
+          Keep the manufacturer,
+          technical support, and warranty
+          information with the device so
+          it is easy to find when
+          something needs service.
+        </p>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(240px, 1fr))",
+            gap: theme.spacing.md,
+          }}
+        >
+          <label
+            style={labelStyle}
+          >
+            <span
+              style={
+                labelTextStyle
+              }
+            >
+              MANUFACTURER WEBSITE
+            </span>
+
+            <input
+              type="url"
+              value={
+                manufacturerWebsite
+              }
+              onChange={(event) =>
+                setManufacturerWebsite(
+                  event.target.value,
+                )
+              }
+              placeholder="https://www.manufacturer.com"
+              style={inputStyle}
+            />
+          </label>
+
+          <label
+            style={labelStyle}
+          >
+            <span
+              style={
+                labelTextStyle
+              }
+            >
+              SUPPORT WEBSITE
+            </span>
+
+            <input
+              type="url"
+              value={
+                supportWebsite
+              }
+              onChange={(event) =>
+                setSupportWebsite(
+                  event.target.value,
+                )
+              }
+              placeholder="https://www.manufacturer.com/support"
+              style={inputStyle}
+            />
+          </label>
+
+          <label
+            style={labelStyle}
+          >
+            <span
+              style={
+                labelTextStyle
+              }
+            >
+              SUPPORT PHONE
+            </span>
+
+            <input
+              type="tel"
+              value={
+                supportPhone
+              }
+              onChange={(event) =>
+                setSupportPhone(
+                  event.target.value,
+                )
+              }
+              placeholder="Example: 800-555-1234"
+              style={inputStyle}
+            />
+          </label>
+
+          <label
+            style={labelStyle}
+          >
+            <span
+              style={
+                labelTextStyle
+              }
+            >
+              WARRANTY EXPIRATION
+            </span>
+
+            <input
+              type="date"
+              value={
+                warrantyExpiresAt
+              }
+              onChange={(event) =>
+                setWarrantyExpiresAt(
+                  event.target.value,
+                )
+              }
+              style={inputStyle}
+            />
+          </label>
+        </div>
+      </section>
+
+      {/* NOTES */}
+      <section
+        style={sectionStyle}
       >
         <label
           style={labelStyle}
@@ -1047,11 +1183,13 @@ useEffect(() => {
             color: "#FFFFFF",
             padding: "12px 18px",
             fontWeight: 800,
+
             cursor:
               isSaving ||
               !name.trim()
                 ? "not-allowed"
                 : "pointer",
+
             opacity:
               isSaving ||
               !name.trim()

@@ -136,6 +136,14 @@ export default async function ManualDevicePage({
     } => Boolean(document.url),
   );
 
+  const hasSupportInformation =
+  Boolean(
+    device.manufacturerWebsite ||
+      device.supportWebsite ||
+      device.supportPhone ||
+      device.warrantyExpiresAt,
+  );
+
   return (
     <main
       style={{
@@ -481,6 +489,191 @@ export default async function ManualDevicePage({
             </p>
           )}
         </section>
+
+        <section
+  style={{
+    background:
+      theme.colors.surface,
+    border: `1px solid ${theme.colors.border}`,
+    borderRadius:
+      theme.radius.large,
+    padding: theme.spacing.lg,
+    marginBottom:
+      theme.spacing.lg,
+  }}
+>
+  <p
+    style={{
+      color:
+        theme.colors.textLight,
+      fontSize: "0.72rem",
+      fontWeight: 800,
+      letterSpacing: "0.08em",
+      marginTop: 0,
+      marginBottom:
+        theme.spacing.md,
+    }}
+  >
+    SUPPORT INFORMATION
+  </p>
+
+  {hasSupportInformation ? (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns:
+          "repeat(auto-fit, minmax(220px, 1fr))",
+        gap: theme.spacing.lg,
+      }}
+    >
+      {device.manufacturerWebsite && (
+        <div>
+          <p
+            style={{
+              color:
+                theme.colors.textLight,
+              fontSize: "0.72rem",
+              fontWeight: 800,
+              letterSpacing: "0.05em",
+              marginTop: 0,
+              marginBottom:
+                theme.spacing.xs,
+            }}
+          >
+            MANUFACTURER WEBSITE
+          </p>
+
+          <a
+            href={
+              device.manufacturerWebsite
+            }
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              color:
+                theme.colors.primary,
+              fontWeight: 800,
+              textDecoration: "none",
+            }}
+          >
+            Open Manufacturer Site ↗
+          </a>
+        </div>
+      )}
+
+      {device.supportWebsite && (
+        <div>
+          <p
+            style={{
+              color:
+                theme.colors.textLight,
+              fontSize: "0.72rem",
+              fontWeight: 800,
+              letterSpacing: "0.05em",
+              marginTop: 0,
+              marginBottom:
+                theme.spacing.xs,
+            }}
+          >
+            SUPPORT WEBSITE
+          </p>
+
+          <a
+            href={
+              device.supportWebsite
+            }
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              color:
+                theme.colors.primary,
+              fontWeight: 800,
+              textDecoration: "none",
+            }}
+          >
+            Open Support Site ↗
+          </a>
+        </div>
+      )}
+
+      {device.supportPhone && (
+        <div>
+          <p
+            style={{
+              color:
+                theme.colors.textLight,
+              fontSize: "0.72rem",
+              fontWeight: 800,
+              letterSpacing: "0.05em",
+              marginTop: 0,
+              marginBottom:
+                theme.spacing.xs,
+            }}
+          >
+            SUPPORT PHONE
+          </p>
+
+          <a
+            href={`tel:${device.supportPhone}`}
+            style={{
+              color:
+                theme.colors.primary,
+              fontWeight: 800,
+              textDecoration: "none",
+            }}
+          >
+            {device.supportPhone}
+          </a>
+        </div>
+      )}
+
+      {device.warrantyExpiresAt && (
+        <div>
+          <p
+            style={{
+              color:
+                theme.colors.textLight,
+              fontSize: "0.72rem",
+              fontWeight: 800,
+              letterSpacing: "0.05em",
+              marginTop: 0,
+              marginBottom:
+                theme.spacing.xs,
+            }}
+          >
+            WARRANTY EXPIRATION
+          </p>
+
+          <p
+            style={{
+              color:
+                theme.colors.primaryDark,
+              fontWeight: 700,
+              margin: 0,
+              lineHeight: 1.5,
+            }}
+          >
+            {formatDate(
+              device.warrantyExpiresAt,
+            )}
+          </p>
+        </div>
+      )}
+    </div>
+  ) : (
+    <p
+      style={{
+        color:
+          theme.colors.textLight,
+        lineHeight: 1.6,
+        margin: 0,
+      }}
+    >
+      No support information has
+      been added yet.
+    </p>
+  )}
+</section>
 
         <section
           style={{
