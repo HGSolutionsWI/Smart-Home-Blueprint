@@ -15,6 +15,7 @@ import {
 
 import type {
   BlueprintPlanMarkerType,
+  BlueprintPlanPathPoint,
   DatabaseBlueprintPlanMarker,
 } from "@/lib/supabase/blueprintPlanMarkers";
 
@@ -183,6 +184,9 @@ export function PlanMarkupViewer({
       "wifi-access-point",
     );
 
+  const [draftPathPoints, setDraftPathPoints] =
+  useState<BlueprintPlanPathPoint[]>([]); 
+
   const [editingLabel, setEditingLabel] =
     useState("");
 
@@ -324,48 +328,74 @@ function resetZoom() {
   }
 
   async function handlePlanClick(
-    event: React.MouseEvent<HTMLDivElement>,
+  event: React.MouseEvent<HTMLDivElement>,
+) {
+  if (
+    isSaving ||
+    draggingMarkerId
   ) {
-    if (
-      isSaving ||
-      draggingMarkerId
-    ) {
-      return;
-    }
+    return;
+  }
 
-    const position =
-      getNormalizedPosition(
-        event.clientX,
-        event.clientY,
-      );
+  const position =
+    getNormalizedPosition(
+      event.clientX,
+      event.clientY,
+    );
 
-    if (!position) {
-      return;
-    }
+  if (!position) {
+    return;
+  }
 
-    try {
-      setIsSaving(true);
-      setMessage("Saving marker...");
+  if (
+  selectedMarkerType ===
+  "conduit-pathway"
+) {
+  setDraftPathPoints(
+    (currentPoints) => [
+      ...currentPoints,
+      position,
+    ],
+  );
 
-      const marker =
-        await createBlueprintPlanMarker({
-          planId,
-          projectId,
+  if (draftPathPoints.length === 0) {
+    setMessage(
+      "Pathway started. Click again to add a bend or endpoint.",
+    );
+  } else {
+    setMessage(
+      "Point added. Continue clicking to add bends, then use Finish Pathway.",
+    );
+  }
 
-          markerType:
+  return;
+}
+
+  try {
+    setIsSaving(true);
+    setMessage("Saving marker...");
+
+    const marker =
+      await createBlueprintPlanMarker({
+        planId,
+        projectId,
+
+        markerType:
+          selectedMarkerType,
+
+        label:
+          getMarkerLabel(
             selectedMarkerType,
+          ),
 
-          label:
-            getMarkerLabel(
-              selectedMarkerType,
-            ),
+        xPosition:
+          position.x,
 
-          xPosition:
-            position.x,
+        yPosition:
+          position.y,
+      });
 
-          yPosition:
-            position.y,
-        });
+    // keep the rest of your existing marker logic unchanged
 
       setMarkers((currentMarkers) => [
         ...currentMarkers,
@@ -593,6 +623,81 @@ function resetZoom() {
     } finally {
       setIsSaving(false);
     }
+    }
+
+  async function finishPathway() {
+    if (draftPathPoints.length < 2) {
+      setMessage(
+        "Add at least two points before finishing the pathway.",
+      );
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setMessage("Saving pathway...");
+
+      const firstPoint =
+        draftPathPoints[0];
+
+      const lastPoint =
+        draftPathPoints[
+          draftPathPoints.length - 1
+        ];
+
+      const marker =
+        await createBlueprintPlanMarker({
+          planId,
+          projectId,
+
+          markerType:
+            "conduit-pathway",
+
+          label:
+            "Conduit / Pathway",
+
+          xPosition:
+            firstPoint.x,
+
+          yPosition:
+            firstPoint.y,
+
+          endXPosition:
+            lastPoint.x,
+
+          endYPosition:
+            lastPoint.y,
+
+          pathPoints:
+            draftPathPoints,
+        });
+
+      setMarkers(
+        (currentMarkers) => [
+          ...currentMarkers,
+          marker,
+        ],
+      );
+
+      setDraftPathPoints([]);
+
+      setMessage("Pathway saved.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to save pathway.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  function cancelPathway() {
+    setDraftPathPoints([]);
+    setMessage(
+      "Pathway drawing canceled.",
+    );
   }
 
   return (
@@ -700,19 +805,105 @@ function resetZoom() {
             })}
           </div>
 
-          <p
-            style={{
-              margin: 0,
-              color:
-                theme.colors.textLight,
-              lineHeight: 1.5,
-            }}
-          >
-            Choose a device type, then
-            click the plan to place it.
-            Click a marker to edit it, or
-            drag it to a new location.
-          </p>
+{selectedMarkerType === "conduit-pathway" && (
+  <div
+    style={{
+      display: "flex",
+      gap: theme.spacing.sm,
+      flexWrap: "wrap",
+      alignItems: "center",
+    }}
+  >
+    <button
+      type="button"
+      onClick={finishPathway}
+      disabled={
+        draftPathPoints.length < 2 ||
+        isSaving
+      }
+      style={{
+        border: "none",
+        borderRadius: theme.radius.medium,
+        background: theme.colors.primary,
+        color: "#FFFFFF",
+        padding: "9px 13px",
+        fontWeight: 800,
+        cursor:
+          draftPathPoints.length < 2 ||
+          isSaving
+            ? "not-allowed"
+            : "pointer",
+        opacity:
+          draftPathPoints.length < 2 ||
+          isSaving
+            ? 0.5
+            : 1,
+      }}
+    >
+      Finish Pathway
+    </button>
+
+    <button
+      type="button"
+      onClick={cancelPathway}
+      disabled={
+        draftPathPoints.length === 0 ||
+        isSaving
+      }
+      style={{
+        border: `1px solid ${theme.colors.border}`,
+        borderRadius: theme.radius.medium,
+        background: theme.colors.surface,
+        color: theme.colors.primaryDark,
+        padding: "9px 13px",
+        fontWeight: 700,
+        cursor:
+          draftPathPoints.length === 0 ||
+          isSaving
+            ? "not-allowed"
+            : "pointer",
+        opacity:
+          draftPathPoints.length === 0 ||
+          isSaving
+            ? 0.5
+            : 1,
+      }}
+    >
+      Cancel
+    </button>
+
+    <span
+      style={{
+        color: theme.colors.textLight,
+        fontSize: "0.8rem",
+        fontWeight: 700,
+      }}
+    >
+      {draftPathPoints.length === 0
+        ? "Click the plan to start a pathway."
+        : `${draftPathPoints.length} point${
+            draftPathPoints.length === 1
+              ? ""
+              : "s"
+          } added`}
+    </span>
+  </div>
+)}
+
+<p
+  style={{
+    margin: 0,
+    color: theme.colors.textLight,
+    lineHeight: 1.5,
+  }}
+>
+  {selectedMarkerType ===
+  "conduit-pathway"
+    ? draftPathPoints.length === 0
+      ? "Click the plan to place the pathway start point."
+      : "Keep clicking to add bends or the final endpoint, then choose Finish Pathway."
+    : "Choose a device type, then click the plan to place it. Click a marker to edit it, or drag it to a new location."}
+</p>
         </div>
       </section>
 
@@ -1165,124 +1356,238 @@ function resetZoom() {
           />
 
           {!isLoading &&
-            markers.map((marker) => {
-              const isSelected =
-                marker.id ===
-                selectedMarkerId;
+  markers.map((marker) => {
+    const isSelected =
+      marker.id === selectedMarkerId;
 
-              const isDragging =
-                marker.id ===
-                  draggingMarkerId &&
-                dragPosition;
+    /*
+     * Pathways render as lines instead of
+     * normal round equipment markers.
+     */
+    if (
+  marker.markerType ===
+  "conduit-pathway"
+) {
+  const pathPoints =
+    marker.pathPoints &&
+    marker.pathPoints.length >= 2
+      ? marker.pathPoints
+      : marker.endXPosition !== undefined &&
+          marker.endYPosition !== undefined
+        ? [
+            {
+              x: marker.xPosition,
+              y: marker.yPosition,
+            },
+            {
+              x: marker.endXPosition,
+              y: marker.endYPosition,
+            },
+          ]
+        : [];
 
-              const xPosition =
-                isDragging
-                  ? dragPosition.x
-                  : marker.xPosition;
+  if (pathPoints.length >= 2) {
+    const svgPoints = pathPoints
+      .map(
+        (point) =>
+          `${point.x * 100},${point.y * 100}`,
+      )
+      .join(" ");
 
-              const yPosition =
-                isDragging
-                  ? dragPosition.y
-                  : marker.yPosition;
+    return (
+      <svg
+        key={marker.id}
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          overflow: "visible",
+          pointerEvents: "none",
+          zIndex: isSelected ? 3 : 1,
+        }}
+      >
+        {/* Larger invisible click target */}
+        <polyline
+          points={svgPoints}
+          fill="none"
+          stroke="transparent"
+          strokeWidth="10"
+          vectorEffect="non-scaling-stroke"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          style={{
+            pointerEvents: "stroke",
+            cursor: "pointer",
+          }}
+          onClick={(event) => {
+            event.stopPropagation();
+            selectMarker(marker);
+          }}
+        />
 
-              return (
-                <button
-                  key={marker.id}
-                  type="button"
-                  title={
-                    marker.label ||
-                    getMarkerLabel(
-                      marker.markerType,
-                    )
-                  }
-                  onClick={(event) => {
-                    event.stopPropagation();
+        {/* Visible pathway */}
+        <polyline
+          points={svgPoints}
+          fill="none"
+          stroke={getMarkerColor(
+            marker.markerType,
+          )}
+          strokeWidth={
+            isSelected ? "5" : "3"
+          }
+          strokeDasharray="8 5"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+          style={{
+            pointerEvents: "none",
+          }}
+        />
 
-                    selectMarker(marker);
-                  }}
-                  onPointerDown={(event) =>
-                    handleMarkerPointerDown(
-                      event,
-                      marker,
-                    )
-                  }
-                  onPointerMove={(event) =>
-                    handleMarkerPointerMove(
-                      event,
-                      marker,
-                    )
-                  }
-                  onPointerUp={(event) =>
-                    handleMarkerPointerUp(
-                      event,
-                      marker,
-                    )
-                  }
-                  style={{
-                    position: "absolute",
+        {/* Every pathway point */}
+        {pathPoints.map(
+          (point, pointIndex) => (
+            <circle
+              key={`${marker.id}-${pointIndex}`}
+              cx={point.x * 100}
+              cy={point.y * 100}
+              r="0.7"
+              fill={getMarkerColor(
+                marker.markerType,
+              )}
+              stroke="#FFFFFF"
+              strokeWidth="0.3"
+              vectorEffect="non-scaling-stroke"
+              style={{
+                pointerEvents: "none",
+              }}
+            />
+          ),
+        )}
+      </svg>
+    );
+  }
+}
 
-                    left: `${
-                      xPosition * 100
-                    }%`,
+    /*
+     * Everything below remains the normal
+     * draggable equipment-marker behavior.
+     */
+    const isDragging =
+      marker.id === draggingMarkerId &&
+      dragPosition;
 
-                    top: `${
-                      yPosition * 100
-                    }%`,
+    const xPosition =
+      isDragging
+        ? dragPosition.x
+        : marker.xPosition;
 
-                    transform:
-                      "translate(-50%, -50%)",
+    const yPosition =
+      isDragging
+        ? dragPosition.y
+        : marker.yPosition;
 
-                    width: isSelected
-                      ? "36px"
-                      : "30px",
+    return (
+      <button
+        key={marker.id}
+        type="button"
+        title={
+          marker.label ||
+          getMarkerLabel(
+            marker.markerType,
+          )
+        }
+        onClick={(event) => {
+          event.stopPropagation();
 
-                    height: isSelected
-                      ? "36px"
-                      : "30px",
+          selectMarker(marker);
+        }}
+        onPointerDown={(event) =>
+          handleMarkerPointerDown(
+            event,
+            marker,
+          )
+        }
+        onPointerMove={(event) =>
+          handleMarkerPointerMove(
+            event,
+            marker,
+          )
+        }
+        onPointerUp={(event) =>
+          handleMarkerPointerUp(
+            event,
+            marker,
+          )
+        }
+        style={{
+          position: "absolute",
 
-                    borderRadius: "999px",
+          left: `${
+            xPosition * 100
+          }%`,
 
-                    display: "grid",
-                    placeItems: "center",
+          top: `${
+            yPosition * 100
+          }%`,
 
-                    background:
-                      getMarkerColor(
-                        marker.markerType,
-                      ),
+          transform:
+            "translate(-50%, -50%)",
 
-                    color: "#FFFFFF",
+          width: isSelected
+            ? "36px"
+            : "30px",
 
-                    border: isSelected
-                      ? "4px solid #0F172A"
-                      : "3px solid #FFFFFF",
+          height: isSelected
+            ? "36px"
+            : "30px",
 
-                    boxShadow:
-                      "0 4px 12px rgba(15, 23, 42, 0.25)",
+          borderRadius: "999px",
 
-                    fontSize: "0.68rem",
-                    fontWeight: 900,
+          display: "grid",
+          placeItems: "center",
 
-                    cursor:
-                      draggingMarkerId ===
-                      marker.id
-                        ? "grabbing"
-                        : "grab",
+          background:
+            getMarkerColor(
+              marker.markerType,
+            ),
 
-                    padding: 0,
+          color: "#FFFFFF",
 
-                    zIndex: isSelected
-                      ? 3
-                      : 2,
+          border: isSelected
+            ? "4px solid #0F172A"
+            : "3px solid #FFFFFF",
 
-                    touchAction: "none",
-                  }}
-                >
-                  {getMarkerShortLabel(
-                    marker.markerType,
-                  )}
-                </button>
-              );
-            })}
+          boxShadow:
+            "0 4px 12px rgba(15, 23, 42, 0.25)",
+
+          fontSize: "0.68rem",
+          fontWeight: 900,
+
+          cursor:
+            draggingMarkerId ===
+            marker.id
+              ? "grabbing"
+              : "grab",
+
+          padding: 0,
+
+          zIndex: isSelected
+            ? 3
+            : 2,
+
+          touchAction: "none",
+        }}
+      >
+        {getMarkerShortLabel(
+          marker.markerType,
+        )}
+      </button>
+    );
+  })}
         </div>
       </div>
     </div>
