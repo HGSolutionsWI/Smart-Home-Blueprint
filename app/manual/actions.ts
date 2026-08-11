@@ -12,6 +12,14 @@ import {
   getDatabaseBlueprintProjectMarkers,
 } from "@/lib/supabase/blueprintPlanMarkers";
 
+import {
+  discoverDeviceDocumentation,
+} from "@/lib/manual/documentDiscovery";
+
+import type {
+  ManualDocumentCandidate,
+} from "@/lib/manual/documentDiscovery";
+
 import type {
   CreateSmartManualDeviceInput,
   DatabaseSmartManualDevice,
@@ -27,6 +35,16 @@ export async function getManualBlueprintMarkers(
 ): Promise<DatabaseBlueprintPlanMarker[]> {
   return getDatabaseBlueprintProjectMarkers(
     projectId,
+  );
+}
+
+export async function findManualDocumentation(
+  manufacturer: string,
+  model: string,
+): Promise<ManualDocumentCandidate[]> {
+  return discoverDeviceDocumentation(
+    manufacturer,
+    model,
   );
 }
 

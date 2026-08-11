@@ -9,9 +9,14 @@ import { useRouter } from "next/navigation";
 
 import {
   createManualDevice,
+  findManualDocumentation,
   getManualBlueprintMarkers,
   updateManualDevice,
 } from "@/app/manual/actions";
+
+import type {
+  ManualDocumentCandidate,
+} from "@/lib/manual/documentDiscovery";
 
 import type {
   DatabaseBlueprintPlanMarker,
@@ -176,6 +181,25 @@ export function ManualDeviceForm({
   ] = useState(
     device?.manufacturer ?? "",
   );
+
+  const [
+  documentationResults,
+  setDocumentationResults,
+] = useState<
+  ManualDocumentCandidate[]
+>([]);
+
+const [
+  isSearchingDocumentation,
+  setIsSearchingDocumentation,
+] = useState(false);
+
+const [
+  documentationSearchError,
+  setDocumentationSearchError,
+] = useState<string | null>(
+  null,
+);
 
   const [
     model,
@@ -379,6 +403,49 @@ export function ManualDeviceForm({
     device,
     initialBlueprintMarker,
   ]);
+
+  async function handleFindDocumentation() {
+  if (
+    !manufacturer.trim() ||
+    !model.trim()
+  ) {
+    setDocumentationSearchError(
+      "Enter both manufacturer and model before searching.",
+    );
+
+    return;
+  }
+
+  try {
+    setIsSearchingDocumentation(true);
+    setDocumentationSearchError(null);
+    setDocumentationResults([]);
+
+    const results =
+      await findManualDocumentation(
+        manufacturer.trim(),
+        model.trim(),
+      );
+
+    setDocumentationResults(
+      results,
+    );
+
+    if (results.length === 0) {
+      setDocumentationSearchError(
+        "No documentation candidates were found.",
+      );
+    }
+  } catch (error) {
+    setDocumentationSearchError(
+      error instanceof Error
+        ? error.message
+        : "Unable to search for documentation.",
+    );
+  } finally {
+    setIsSearchingDocumentation(false);
+  }
+}
 
   async function handleSubmit(
     event:
@@ -883,6 +950,219 @@ export function ManualDeviceForm({
           documentation that should stay
           with this device.
         </p>
+
+        <div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing.sm,
+    flexWrap: "wrap",
+    marginBottom: theme.spacing.lg,
+  }}
+>
+  <button
+    type="button"
+    onClick={handleFindDocumentation}
+    disabled={
+      isSearchingDocumentation ||
+      !manufacturer.trim() ||
+      !model.trim()
+    }
+    style={{
+      border: "none",
+      borderRadius: theme.radius.medium,
+      background: theme.colors.primary,
+      color: "#FFFFFF",
+      padding: "10px 14px",
+      fontWeight: 800,
+      cursor:
+        isSearchingDocumentation ||
+        !manufacturer.trim() ||
+        !model.trim()
+          ? "not-allowed"
+          : "pointer",
+      opacity:
+        isSearchingDocumentation ||
+        !manufacturer.trim() ||
+        !model.trim()
+          ? 0.55
+          : 1,
+    }}
+  >
+    {isSearchingDocumentation
+      ? "Searching..."
+      : "Find Documentation"}
+  </button>
+
+  <span
+    style={{
+      color: theme.colors.textLight,
+      fontSize: "0.8rem",
+      lineHeight: 1.5,
+    }}
+  >
+    Uses the manufacturer and model entered above.
+  </span>
+</div>
+
+{documentationSearchError && (
+  <div
+    style={{
+      border: `1px solid ${theme.colors.border}`,
+      borderRadius: theme.radius.medium,
+      background: "#FFF7ED",
+      padding: theme.spacing.sm,
+      color: theme.colors.text,
+      marginBottom: theme.spacing.md,
+    }}
+  >
+    {documentationSearchError}
+  </div>
+)}
+
+{documentationResults.length > 0 && (
+  <div
+    style={{
+      display: "grid",
+      gap: theme.spacing.sm,
+      marginBottom: theme.spacing.lg,
+    }}
+  >
+    <p
+      style={{
+        color: theme.colors.textLight,
+        fontSize: "0.72rem",
+        fontWeight: 800,
+        letterSpacing: "0.08em",
+        margin: 0,
+      }}
+    >
+      DOCUMENTATION FOUND
+    </p>
+
+    {documentationResults.map(
+      (candidate) => (
+        <article
+          key={candidate.url}
+          style={{
+            border: `1px solid ${theme.colors.border}`,
+            borderRadius: theme.radius.medium,
+            padding: theme.spacing.md,
+            background: "#F8FAFC",
+          }}
+        >
+          <div
+            style={{
+              display: "grid",
+              gap: theme.spacing.xs,
+            }}
+          >
+            <strong
+              style={{
+                color: theme.colors.primaryDark,
+                lineHeight: 1.4,
+              }}
+            >
+              {candidate.title}
+            </strong>
+
+            <span
+              style={{
+                color: theme.colors.textLight,
+                fontSize: "0.8rem",
+              }}
+            >
+              {candidate.source}
+              {" · "}
+              {candidate.type.replaceAll(
+                "-",
+                " ",
+              )}
+            </span>
+
+            {candidate.description && (
+              <p
+                style={{
+                  color: theme.colors.text,
+                  lineHeight: 1.5,
+                  margin: 0,
+                  fontSize: "0.9rem",
+                }}
+              >
+                {candidate.description}
+              </p>
+            )}
+
+            <div
+              style={{
+                display: "flex",
+                gap: theme.spacing.sm,
+                flexWrap: "wrap",
+                marginTop: theme.spacing.xs,
+              }}
+            >
+              <a
+                href={candidate.url}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  color: theme.colors.primary,
+                  fontWeight: 800,
+                  textDecoration: "none",
+                  padding: "8px 0",
+                }}
+              >
+                Preview ↗
+              </a>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setManualUrl(candidate.url)
+                }
+              >
+                Use as Manual
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setInstallGuideUrl(
+                    candidate.url,
+                  )
+                }
+              >
+                Use as Install Guide
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setWarrantyUrl(
+                    candidate.url,
+                  )
+                }
+              >
+                Use as Warranty
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setSupportWebsite(
+                    candidate.url,
+                  )
+                }
+              >
+                Use as Support
+              </button>
+            </div>
+          </div>
+        </article>
+      ),
+    )}
+  </div>
+)}
 
         <div
           style={{
