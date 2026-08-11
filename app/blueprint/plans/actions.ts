@@ -15,6 +15,7 @@ import {
   updateDatabaseBlueprintPlanMarker,
   type BlueprintPlanMarkerType,
   type DatabaseBlueprintPlanMarker,
+  type BlueprintPlanPathPoint,
 } from "@/lib/supabase/blueprintPlanMarkers";
 
 import { createClient } from "@/lib/supabase/server";
@@ -133,6 +134,9 @@ export async function createBlueprintPlanMarker(input: {
   notes?: string;
   xPosition: number;
   yPosition: number;
+  endXPosition?: number;
+  endYPosition?: number;
+  pathPoints?: BlueprintPlanPathPoint[] | null;
 }): Promise<DatabaseBlueprintPlanMarker> {
   return createDatabaseBlueprintPlanMarker(input);
 }
@@ -145,6 +149,9 @@ export async function updateBlueprintPlanMarker(
     notes?: string | null;
     xPosition?: number;
     yPosition?: number;
+    endXPosition?: number | null;
+    endYPosition?: number | null;
+    pathPoints?: BlueprintPlanPathPoint[] | null;
   },
 ): Promise<DatabaseBlueprintPlanMarker> {
   return updateDatabaseBlueprintPlanMarker(

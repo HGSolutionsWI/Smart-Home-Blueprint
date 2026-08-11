@@ -15,6 +15,8 @@ export type BlueprintPlanMarkerType =
 export type BlueprintPlanPathPoint = {
   x: number;
   y: number;
+
+  markerId?: string;
 };
 
 export type DatabaseBlueprintPlanMarker = {
@@ -169,6 +171,18 @@ function validatePathPoints(
   points.forEach((point) => {
     validatePosition(point.x, "x");
     validatePosition(point.y, "y");
+
+    if (
+      point.markerId !== undefined &&
+      (
+        typeof point.markerId !== "string" ||
+        point.markerId.trim().length === 0
+      )
+    ) {
+      throw new Error(
+        "A pathway marker connection must contain a valid marker ID.",
+      );
+    }
   });
 }
 
