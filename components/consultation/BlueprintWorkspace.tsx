@@ -43,25 +43,31 @@ async function handleContinue() {
   }
 
   if (isFinalQuestion) {
-    const completedProject =
-      markBlueprintComplete();
+  const completedProject =
+    markBlueprintComplete();
 
-    if (completedProject) {
-      try {
-        await createBlueprintInAccount(
-          completedProject,
-        );
-      } catch (error) {
-        console.error(
-          "Failed to sync completed Blueprint:",
-          error,
-        );
-      }
+  if (completedProject) {
+    try {
+      await createBlueprintInAccount(
+        completedProject,
+      );
+    } catch (error) {
+      console.error(
+        "Failed to sync completed Blueprint:",
+        error,
+      );
     }
 
-    router.push("/blueprint/results");
+    router.push(
+      `/blueprint/results?project=${completedProject.id}`,
+    );
+
     return;
   }
+
+  router.push("/blueprint/results");
+  return;
+}
 
   nextQuestion();
 }

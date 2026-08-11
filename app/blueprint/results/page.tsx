@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 import { buildBlueprintBudgetGuidance } from "@/lib/blueprint/budgetGuidance";
 import { buildBlueprintDesignGaps } from "@/lib/blueprint/designGaps";
@@ -1465,9 +1466,100 @@ export default function BlueprintResultsPage() {
                 )}
               </article>
             ))}
-          </div>
-        </section>
+                </div>
+    </section>
+
+    <section
+      style={{
+        background: theme.colors.surface,
+        border: `1px solid ${theme.colors.border}`,
+        borderRadius: theme.radius.large,
+        padding: theme.spacing.xl,
+        marginBottom: theme.spacing.xl,
+      }}
+    >
+      <p
+        style={{
+          color: theme.colors.primary,
+          fontWeight: 800,
+          fontSize: "0.75rem",
+          letterSpacing: "0.1em",
+          marginTop: 0,
+          marginBottom: theme.spacing.xs,
+        }}
+      >
+        REVIEW YOUR BLUEPRINT
+      </p>
+
+      <h2
+        style={{
+          color: theme.colors.primaryDark,
+          fontSize: "clamp(1.6rem, 3vw, 2.4rem)",
+          lineHeight: 1.2,
+          marginTop: 0,
+          marginBottom: theme.spacing.sm,
+        }}
+      >
+        Does everything look right?
+      </h2>
+
+      <p
+        style={{
+          color: theme.colors.text,
+          lineHeight: 1.7,
+          maxWidth: "800px",
+          marginTop: 0,
+          marginBottom: theme.spacing.lg,
+        }}
+      >
+        Review the conclusions in your Blueprint before
+        moving forward. If something changed or an answer
+        does not look right, return to your consultation and
+        make adjustments. Your Blueprint will be regenerated
+        from your updated answers.
+      </p>
+
+      <div
+        style={{
+          display: "flex",
+          gap: theme.spacing.md,
+          flexWrap: "wrap",
+        }}
+      >
+        <Link
+          href="/blueprint/review"
+          style={{
+            display: "inline-block",
+            border: `1px solid ${theme.colors.border}`,
+            borderRadius: theme.radius.medium,
+            background: theme.colors.surface,
+            color: theme.colors.primaryDark,
+            textDecoration: "none",
+            padding: "12px 16px",
+            fontWeight: 800,
+          }}
+        >
+          Review / Edit Consultation
+        </Link>
+
+        <Link
+          href={`/blueprint/next?project=${project.id}`}
+          style={{
+            display: "inline-block",
+            border: "none",
+            borderRadius: theme.radius.medium,
+            background: theme.colors.primary,
+            color: "#FFFFFF",
+            textDecoration: "none",
+            padding: "12px 16px",
+            fontWeight: 800,
+          }}
+        >
+          Looks Good — How Can HGS Help Me Next?
+        </Link>
       </div>
-    </main>
-  );
+    </section>
+  </div>
+</main>
+);
 }
