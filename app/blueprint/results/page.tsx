@@ -14,6 +14,10 @@ import {
 } from "@/lib/blueprint/storage";
 import { theme } from "@/lib/constants/theme";
 
+import {
+  hasBlueprintProjectPlan,
+} from "./actions";
+
 const recommendationPriorityOrder = {
   critical: 0,
   high: 1,
@@ -78,6 +82,11 @@ function formatValue(value: unknown): string {
 export default function BlueprintResultsPage() {
   const [project, setProject] =
     useState<StoredBlueprintProject | null>(null);
+  
+  const [
+  hasProjectPlan,
+  setHasProjectPlan,
+] = useState(false);  
 
   const [hasLoaded, setHasLoaded] = useState(false);
 
@@ -85,6 +94,34 @@ export default function BlueprintResultsPage() {
     setProject(loadBlueprintProject());
     setHasLoaded(true);
   }, []);
+
+  useEffect(() => {
+  if (!project?.id) {
+    return;
+  }
+
+  async function loadPlanStatus() {
+    try {
+      const hasPlan =
+        await hasBlueprintProjectPlan(
+          project!.id,
+        );
+
+      setHasProjectPlan(
+        hasPlan,
+      );
+    } catch (error) {
+      console.error(
+        "Unable to determine Blueprint plan status:",
+        error,
+      );
+    }
+  }
+
+  void loadPlanStatus();
+}, [
+  project?.id,
+]);
 
   if (!hasLoaded) {
     return (
@@ -154,8 +191,12 @@ export default function BlueprintResultsPage() {
     project.answers,
   );
 
-  const designGaps = buildBlueprintDesignGaps(
+  const designGaps =
+  buildBlueprintDesignGaps(
     project.answers,
+    {
+      hasProjectPlan,
+    },
   );
 
   const budgetGuidance = buildBlueprintBudgetGuidance(
@@ -237,6 +278,12 @@ export default function BlueprintResultsPage() {
         recommendationPriorityOrder[b.priority],
     )
     .slice(0, 5);
+
+  const readinessHeadline =
+  project.answers.projectType === "new-construction" ||
+  project.answers.projectType === "remodel-addition"
+    ? "Blueprint Not Yet Construction-Ready"
+    : "Blueprint Not Yet Installation-Ready";  
 
   const projectSnapshot = [
     {
@@ -831,6 +878,26 @@ export default function BlueprintResultsPage() {
                     >
                       {recommendation.rationale}
                     </p>
+
+                    <div
+  style={{
+    borderLeft: `4px solid ${theme.colors.primary}`,
+    paddingLeft: theme.spacing.md,
+    marginTop: theme.spacing.md,
+  }}
+>
+  <p
+    style={{
+      color: theme.colors.text,
+      lineHeight: 1.7,
+      margin: 0,
+    }}
+  >
+    <strong>Recommended Action:</strong>{" "}
+    {recommendation.action}
+  </p>
+</div>
+
                   </div>
                 </article>
               ))}
@@ -923,7 +990,7 @@ export default function BlueprintResultsPage() {
                       marginBottom: theme.spacing.xs,
                     }}
                   >
-                    Pre-Installation Review Recommended
+                    {readinessHeadline}
                   </p>
 
                   <p

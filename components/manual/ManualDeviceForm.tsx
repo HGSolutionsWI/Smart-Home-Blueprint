@@ -1115,47 +1115,139 @@ const [
                 Preview ↗
               </a>
 
-              <button
-                type="button"
-                onClick={() =>
-                  setManualUrl(candidate.url)
-                }
-              >
-                Use as Manual
-              </button>
+              {candidate.type === "manual" && (
+  <button
+    type="button"
+    onClick={() =>
+      setManualUrl(
+        candidate.url,
+      )
+    }
+    style={{
+      border: `1px solid ${theme.colors.border}`,
+      borderRadius:
+        theme.radius.medium,
+      background:
+        manualUrl === candidate.url
+          ? "#ECFDF5"
+          : theme.colors.surface,
+      color:
+        manualUrl === candidate.url
+          ? "#047857"
+          : theme.colors.primaryDark,
+      padding: "8px 12px",
+      fontWeight: 800,
+      cursor: "pointer",
+    }}
+  >
+    {manualUrl === candidate.url
+      ? "✓ Manual Selected"
+      : "Use as Manual"}
+  </button>
+)}
 
-              <button
-                type="button"
-                onClick={() =>
-                  setInstallGuideUrl(
-                    candidate.url,
-                  )
-                }
-              >
-                Use as Install Guide
-              </button>
+{candidate.type ===
+  "installation-guide" && (
+  <button
+    type="button"
+    onClick={() =>
+      setInstallGuideUrl(
+        candidate.url,
+      )
+    }
+    style={{
+      border: `1px solid ${theme.colors.border}`,
+      borderRadius:
+        theme.radius.medium,
+      background:
+        installGuideUrl ===
+        candidate.url
+          ? "#ECFDF5"
+          : theme.colors.surface,
+      color:
+        installGuideUrl ===
+        candidate.url
+          ? "#047857"
+          : theme.colors.primaryDark,
+      padding: "8px 12px",
+      fontWeight: 800,
+      cursor: "pointer",
+    }}
+  >
+    {installGuideUrl ===
+    candidate.url
+      ? "✓ Install Guide Selected"
+      : "Use as Install Guide"}
+  </button>
+)}
 
-              <button
-                type="button"
-                onClick={() =>
-                  setWarrantyUrl(
-                    candidate.url,
-                  )
-                }
-              >
-                Use as Warranty
-              </button>
+{candidate.type === "warranty" && (
+  <button
+    type="button"
+    onClick={() =>
+      setWarrantyUrl(
+        candidate.url,
+      )
+    }
+    style={{
+      border: `1px solid ${theme.colors.border}`,
+      borderRadius:
+        theme.radius.medium,
+      background:
+        warrantyUrl === candidate.url
+          ? "#ECFDF5"
+          : theme.colors.surface,
+      color:
+        warrantyUrl === candidate.url
+          ? "#047857"
+          : theme.colors.primaryDark,
+      padding: "8px 12px",
+      fontWeight: 800,
+      cursor: "pointer",
+    }}
+  >
+    {warrantyUrl === candidate.url
+      ? "✓ Warranty Selected"
+      : "Use as Warranty"}
+  </button>
+)}
 
-              <button
-                type="button"
-                onClick={() =>
-                  setSupportWebsite(
-                    candidate.url,
-                  )
-                }
-              >
-                Use as Support
-              </button>
+{(
+  candidate.type === "support" ||
+  candidate.type === "manufacturer"
+) && (
+  <button
+    type="button"
+    onClick={() =>
+      setSupportWebsite(
+        candidate.url,
+      )
+    }
+    style={{
+      border: `1px solid ${theme.colors.border}`,
+      borderRadius:
+        theme.radius.medium,
+      background:
+        supportWebsite ===
+        candidate.url
+          ? "#ECFDF5"
+          : theme.colors.surface,
+      color:
+        supportWebsite ===
+        candidate.url
+          ? "#047857"
+          : theme.colors.primaryDark,
+      padding: "8px 12px",
+      fontWeight: 800,
+      cursor: "pointer",
+    }}
+  >
+    {supportWebsite ===
+    candidate.url
+      ? "✓ Support Selected"
+      : "Use as Support"}
+  </button>
+)}
             </div>
           </div>
         </article>
